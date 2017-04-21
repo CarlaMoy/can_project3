@@ -8,5 +8,6 @@ uniform vec4 Colour;
 void main ()
 {
         outColour = Colour;
+      //  outColour = vec4(0.1,0.1,0.6,1.0) * 100;
 }
 

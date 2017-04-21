@@ -27,10 +27,10 @@ struct LightInfo {
 // We'll have a single light in the scene with some default values
 uniform LightInfo Light = LightInfo(
             vec4(0.0, 0.0, 3.0, 1.0),   // position
-            vec3(0.9, 0.9, 0.9),        // La
+            vec3(0.5, 0.5, 0.5),        // La
             vec3(1.0, 1.0, 1.0),        // Ld
             vec3(1.0, 1.0, 1.0),        // Ls
-            vec3(2.0, 2.0, 2.0)         //Intensity
+            vec3(1.0, 1.0, 1.0)         //Intensity
 
             );
 
@@ -47,6 +47,7 @@ struct MaterialInfo {
     vec3 Kd; // Diffuse reflectivity
     vec3 Ks; // Specular reflectivity
     float Shininess; // Specular shininess factor
+    float Roughness;
 };
 
 // The object has a material
@@ -54,7 +55,8 @@ uniform MaterialInfo Material = MaterialInfo(
             vec3(0.2, 0.2, 0.2),    // Ka
             vec3(0.6, 0.6, 0.6),    // Kd
             vec3(0.8, 0.8, 0.8),    // Ks
-            100.0);                  // Shininess
+            100.0,                  // Shininess
+            0.5);                   //roughness
 
 // A texture unit for storing the 3D texture
 uniform samplerCube envMap;
@@ -258,18 +260,18 @@ void main () {
       //  s = normalize( vec3(Light.Position) - FragmentPosition );
         s = normalize( LightPosition - FragmentPosition );
 
-    diffAndSpecShading();
+  //  diffAndSpecShading();
 
     // Reflect the light about the surface normal
     //vec3 r = reflect( -s, np );
-    vec3 halfVec = normalize(v + s);
+    vec3 h = normalize(v + s);
 
     // Compute the light from the ambient, diffuse and specular components
     vec3 lightColour = (
             Light.Intensity * (
             Light.La * Material.Ka +
             Light.Ld * Material.Kd * max( dot(s, n), 0.0 ) +
-            Light.Ls * Material.Ks * pow( max( dot(halfVec, n), 0.0 ), Material.Shininess )));
+            Light.Ls * Material.Ks * pow( max( dot(h, n), 0.0 ), Material.Shininess )));
 
     // The mipmap level is determined by log_2(resolution), so if the texture was 4x4,
     // there would be 8 mipmap levels (128x128,64x64,32x32,16x16,8x8,4x4,2x2,1x1).
@@ -296,7 +298,17 @@ void main () {
 
   //  FragColour = vec4(colour, 1.0) * texture(labelMap, FragmentTexCoord);
 
-    FragColour =  texture(labelMap, FragmentTexCoord) * vec4(lightColour,1.0) * (colour);// * shadeFactor;*/
-   // FragColour = vec4(lightColour,1.0);
+    float gamma = 2.2;
+
+    float NdotH = dot(n,h);
+
+    float r1 = 1.0/(4.0 * Material.Roughness * pow(NdotH, 4.0));
+    float r2 = (NdotH * NdotH - 1.0)/ (Material.Roughness * NdotH * NdotH);
+    float roughness = r1 * exp(r2);
+    FragColour =  texture(labelMap, FragmentTexCoord) * vec4(lightColour,1.0) * colour * roughness;// * shadeFactor;*/
+    FragColour.rgb = pow(FragColour.rgb, vec3(1.0/gamma));
+  //  FragColour *= roughness;
+   // FragColour = vec4(lightColour,1.0) * colour;
+   // FragColour = colour;
 }
 

@@ -25,7 +25,7 @@ NGLScene::NGLScene()
    m_lightYPos=4.0;
    m_lightXoffset=8.0;
    m_lightZoffset=8.0;
-   setTitle("Simple Shadows");
+   setTitle("Can Project");
 }
 
 
@@ -88,7 +88,7 @@ void NGLScene::initializeGL()
   m_lightAngle=0.0f;
 
   // we are creating a shader called Texture
-  shader->createShaderProgram("Texture");
+ /* shader->createShaderProgram("Texture");
   // now we are going to create empty shaders for Frag and Vert
   shader->attachShader("TextureVertex",ngl::ShaderType::VERTEX);
   shader->attachShader("TextureFragment",ngl::ShaderType::FRAGMENT);
@@ -103,7 +103,7 @@ void NGLScene::initializeGL()
   shader->attachShaderToProgram("Texture","TextureFragment");
 
   // now we have associated this data we can link the shader
-  shader->linkProgramObject("Texture");
+  shader->linkProgramObject("Texture");*/
 
   // we are creating a shader called Colour
   shader->createShaderProgram("Colour");
@@ -202,6 +202,8 @@ void NGLScene::initializeGL()
   glViewport(0, 0, width() * devicePixelRatio(), height() * devicePixelRatio());
   m_lightTimer =startTimer(40);
 
+  //glEnable(GL_FRAMEBUFFER_SRGB);
+
 }
 constexpr int TEXTURE_WIDTH=1024;
 constexpr int TEXTURE_HEIGHT=1024;
@@ -220,6 +222,7 @@ void NGLScene::loadMatricesToShadowShader()
   MVP= M*m_cam.getVPMatrix();
   normalMatrix=MV;
   normalMatrix.inverse();
+  shader->setShaderParamFromMat4("M",M);
   shader->setShaderParamFromMat4("MV",MV);
   shader->setShaderParamFromMat4("MVP",MVP);
   shader->setShaderParamFromMat3("normalMatrix",normalMatrix);
@@ -238,8 +241,11 @@ void NGLScene::loadMatricesToShadowShader()
   ngl::Mat4 proj=m_lightCamera.getProjectionMatrix();
   ngl::Mat4 model=m_transform.getMatrix();
 
+  ngl::Mat4 lightSpaceMatrix =  view * proj;
+
   ngl::Mat4 textureMatrix= model * view*proj * bias;
   shader->setShaderParamFromMat4("textureMatrix",textureMatrix);
+  shader->setShaderParamFromMat4("lightSpaceMatrix",lightSpaceMatrix);
 }
 
 void NGLScene::loadToLightPOVShader()
@@ -306,11 +312,12 @@ void NGLScene::drawScene(std::function<void()> _shaderFunc )
 
     m_transform.reset();
     m_transform.setPosition(0.0f,0.0f,0.0f);
-    m_transform.setScale(0.3,0.3,0.3);
-   // _shaderFunc();
-  //  shader->use(CanProgram);
-    loadMatrices(CanProgram);
+    m_transform.setScale(0.4,0.4,0.4);
+    _shaderFunc();
     m_mesh->draw();
+  //  shader->use(CanProgram);
+  //  loadMatrices(CanProgram);
+
 
   //  ngl::Mat4 MVP=m_mouseGlobalTX*m_cam.getVPMatrix();
 //    ngl::ShaderLib *shader=ngl::ShaderLib::instance();
@@ -358,6 +365,7 @@ void NGLScene::paintGL()
   glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
   // clear the screen
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glClearColor(0.3f, 0.4f, 0.4f, 1.0f);
 
   // bind the shadow texture
   glBindTexture(GL_TEXTURE_2D,m_textureID);
@@ -374,8 +382,11 @@ void NGLScene::paintGL()
   // this draws the debug texture on the quad
   //----------------------------------------------------------------------------------------------------------------------
 
-  glBindTexture(GL_TEXTURE_2D,m_textureID);
-  debugTexture(-0.6f,-1,0.6f,1);
+ // glBindTexture(GL_TEXTURE_2D,m_textureID);
+ // debugTexture(-0.6f,-1,0.6f,1);
+
+
+
   //----------------------------------------------------------------------------------------------------------------------
   // now we draw a cube to visualise the light
   //----------------------------------------------------------------------------------------------------------------------
@@ -408,6 +419,12 @@ void NGLScene::paintGL()
   m_text->renderText(250,60,text);
   text.sprintf("Z offset %0.2f",m_lightZoffset);
   m_text->renderText(250,80,text);
+
+  m_transform.reset();
+  m_transform.setPosition(0.0f,0.0f,0.0f);
+  m_transform.setScale(0.4,0.4,0.4);
+  loadMatrices(CanProgram);
+  m_mesh->draw();
 }
 
 void NGLScene::createFramebufferObject()
