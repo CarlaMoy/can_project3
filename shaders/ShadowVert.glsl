@@ -61,5 +61,5 @@ void main()
     Normal = normalMatrix * inNormal;
     TexCoords = inUV;
     FragPosLightSpace = lightSpaceMatrix * vec4(FragPos, 1.0);
-}
-*/
+}*/
+

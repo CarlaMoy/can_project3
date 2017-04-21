@@ -64,7 +64,7 @@ void NGLScene::initializeGL()
   // Now we will create a basic Camera from the graphics library
   // This is a static camera so it only needs to be set once
   // First create Values for the camera position
-  ngl::Vec3 from(0,2,6);
+  ngl::Vec3 from(0,3,6);
   ngl::Vec3 to(0,0,0);
   ngl::Vec3 up(0,1,0);
   // now load to our new camera
@@ -147,7 +147,7 @@ void NGLScene::initializeGL()
 //  prim->createSphere("sphere",0.5,50);
 //  prim->createTorus("torus",0.15f,0.4f,40,40);
 
-  prim->createTrianglePlane("plane",14,14,80,80,ngl::Vec3(0,1,0));
+  prim->createTrianglePlane("plane",100,100,80,80,ngl::Vec3(0,1,0));
 
   shader->loadShader(CanProgram,
                      "shaders/CanVert.glsl",
@@ -241,7 +241,7 @@ void NGLScene::loadMatricesToShadowShader()
   ngl::Mat4 proj=m_lightCamera.getProjectionMatrix();
   ngl::Mat4 model=m_transform.getMatrix();
 
-  ngl::Mat4 lightSpaceMatrix =  view * proj;
+  ngl::Mat4 lightSpaceMatrix = model * view * proj * bias;
 
   ngl::Mat4 textureMatrix= model * view*proj * bias;
   shader->setShaderParamFromMat4("textureMatrix",textureMatrix);

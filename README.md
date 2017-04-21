@@ -1,5 +1,7 @@
 <<<<<<< HEAD
 add second light.
+unreal 4 shading model.
+planar reflections
 
 http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-16-shadow-mapping/
 http://people.inf.elte.hu/plisaai/pdf/David%20Wolff%20-%20OpenGL%204.0%20Shading%20Language%20Cookbook%20%282%29.pdf

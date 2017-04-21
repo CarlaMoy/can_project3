@@ -26,6 +26,7 @@ void main ()
 //  outColour = vec4(0.2,0.2,0.6,1.0);
  // outColour = vec4(shadeFactor* vec4(1.0,1.0,0.0,1.0));
   //outColour=vec4(ShadowCoord);
+
 }
 
 /*#version 330 core
