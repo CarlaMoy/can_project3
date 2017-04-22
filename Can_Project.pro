@@ -28,6 +28,7 @@ DESTDIR=./
 # add the glsl shader files
 OTHER_FILES+= shaders/*.glsl \
               README.md
+LIBS += -lnoise -L$$(NOISEDIR)/lib
 # were are going to default to a console app
 CONFIG += console
 # note each command you add needs a ; as it will be run as a single line
@@ -55,3 +56,5 @@ else{ # note brace must be here
 	message("Using custom NGL location")
 	include($(NGLDIR)/UseNGL.pri)
 }
+
+

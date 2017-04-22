@@ -95,11 +95,11 @@ private:
     //----------------------------------------------------------------------------------------------------------------------
     /// @brief our texture id used by the FBO
     //----------------------------------------------------------------------------------------------------------------------
-    GLuint m_textureID;
+    GLuint m_ShadowtextureID;
     //----------------------------------------------------------------------------------------------------------------------
     /// @brief our FBO id used by the FBO
     //----------------------------------------------------------------------------------------------------------------------
-    GLuint m_fboID;
+    GLuint m_ShadowfboID;
     //----------------------------------------------------------------------------------------------------------------------
     /// @brief y pos of the light
     //----------------------------------------------------------------------------------------------------------------------
@@ -137,7 +137,8 @@ private:
     //----------------------------------------------------------------------------------------------------------------------
     void loadToLightPOVShader();
     void debugTexture(float _t, float _b, float _l, float _r);
-    void createFramebufferObject();
+    void createShadowFBO();
+    void createBlurFBO();
     inline void toggleAnimation(){m_animate ^=true;}
     inline void changeLightYPos(float _dy){m_lightYPos+=_dy;}
     inline void changeLightZOffset(float _dz){m_lightZoffset+=_dz;}
@@ -189,6 +190,8 @@ private:
 
     void loadMatrices(const std::string _program);
 
+    void createNoiseTexture();
+
 
     /// A unique pointer storing our mesh object
     std::unique_ptr<ngl::Obj> m_mesh;
@@ -197,7 +200,7 @@ private:
    // std::unique_ptr<ngl::Light> m_light;
 
     /// The ID of our environment texture
-    GLuint m_envTex, m_glossMapTex, m_labelTex, m_bumpTex;
+    GLuint m_envTex, m_glossMapTex, m_labelTex, m_bumpTex, m_textureMap;
 
 
 };

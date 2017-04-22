@@ -10,7 +10,10 @@ layout (location=0) out vec4 outColour;
 // for windows unix we need
 uniform sampler2D ShadowMap;
 
+uniform sampler2D textureMap;
+
 in vec4 ShadowCoord;
+in vec2 FragmentTexCoord;
 
 
 void main ()
@@ -22,7 +25,7 @@ void main ()
 //  else
 //     outColour=vec4(0.7,0.7,0.7,1.0);
 
-  outColour=vec4(shadeFactor * Colour.rgb, Colour.a);
+  outColour=vec4(shadeFactor * Colour.rgb, Colour.a) * texture(textureMap, FragmentTexCoord);
 //  outColour = vec4(0.2,0.2,0.6,1.0);
  // outColour = vec4(shadeFactor* vec4(1.0,1.0,0.0,1.0));
   //outColour=vec4(ShadowCoord);

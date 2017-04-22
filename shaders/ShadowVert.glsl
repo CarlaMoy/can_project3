@@ -14,8 +14,11 @@ uniform  vec4  inColour;
 layout (location=0) in  vec4  inVert;
 layout (location=1) in vec2 inUV;
 layout (location=2) in  vec3  inNormal;
+
 out vec4  ShadowCoord;
 out vec4  Colour;
+out vec2 FragmentTexCoord;
+//out vec2 FragmentTexCoord;
 void main()
 {
 	vec4 ecPosition = MV * inVert;
@@ -26,6 +29,8 @@ void main()
 	float diffuse = max(0.0, dot(normal, VP));
 	vec4 texCoord = textureMatrix * inVert;
         ShadowCoord   = texCoord;
+        FragmentTexCoord = inUV;
+
 	Colour  = vec4(diffuse * inColour.rgb, inColour.a);
   gl_Position    = MVP * inVert;
 }

@@ -9,11 +9,15 @@ smooth in vec4 ShadowCoord;
 
 uniform sampler2D ShadowMap;
 
+uniform vec2 iResolution;
+
 
 /// @brief our output fragment colour
 layout (location=0) out vec4 FragColour;
 
-uniform vec3 LightPosition;
+//uniform vec3 LightPosition;
+
+
 
 // Structure for holding light parameters
 struct LightInfo {
@@ -25,14 +29,15 @@ struct LightInfo {
 };
 
 // We'll have a single light in the scene with some default values
-uniform LightInfo Light = LightInfo(
+/*uniform LightInfo Light = LightInfo(
             vec4(0.0, 0.0, 3.0, 1.0),   // position
             vec3(0.5, 0.5, 0.5),        // La
             vec3(1.0, 1.0, 1.0),        // Ld
-            vec3(1.0, 1.0, 1.0),        // Ls
+            vec3(1.0, 0.0, 0.0),        // Ls
             vec3(1.0, 1.0, 1.0)         //Intensity
 
-            );
+            );*/
+uniform LightInfo Light[3];
 
 //struct LightInfo Light = LightInfo(
  //                                   vec4 Position;
@@ -154,43 +159,48 @@ vec3 rotateVector(vec3 src, vec3 tgt, vec3 vec) {
 //________________________________________________________________________________________________________________________________________//
 
 
-vec3 diffAndSpecShading()
+vec3 BlinnPhong(int lightIndex, vec3 _n, vec3 _v)
 {
 
-    // Calculate the normal (this is the expensive bit in Phong)
-    vec3 n = FragmentNormal;
 
-    // Calculate the eye vector
-    vec3 v = normalize(vec3(-FragmentPosition));
 
     vec3 s;
-    if(Light.Position.w == 0.0)
-        s = normalize (vec3(Light.Position));
+    if(Light[lightIndex].Position.w == 0.0)
+        s = normalize (vec3(Light[lightIndex].Position));
     else
-        s = normalize( vec3(Light.Position) - FragmentPosition );
+        s = normalize( vec3(Light[lightIndex].Position) - FragmentPosition );
 
 
-    vec3 halfVec = normalize(v + s);
+    vec3 h = normalize(_v + s);
 
-    // Compute the light from the diffuse and specular components
-    vec3 diffSpec = (
-            Light.Intensity * (
-            Light.Ld * Material.Kd * max( dot(s, n), 0.0 ) +
-            Light.Ls * Material.Ks * pow( max( dot(halfVec, n), 0.0 ), Material.Shininess )));
+    float NdotS = dot(_n,s);
 
-    return diffSpec;
+    vec3 ambient = Light[lightIndex].La * Material.Ka;
+
+    vec3 diffuse = Light[lightIndex].Ld * Material.Kd * max( NdotS, 0.0 );
+
+    vec3 specular = vec3(0.0);
+
+    if(NdotS > 0.0)
+    {
+        specular = Light[lightIndex].Ls * Material.Ks * pow( max( dot(h, _n), 0.0 ), Material.Shininess);
+    }
+
+
+    return Light[lightIndex].Intensity * (ambient + diffuse + specular);
+
 }
 
 
 //________________________________________________________________________________________________________________________________________//
 
-subroutine void RenderPassType();
+/*subroutine void RenderPassType();
 subroutine uniform RenderPassType RenderPass;
 
 subroutine (RenderPassType)
 void shadeWithShadow()
 {
-    vec3 ambient = Light.La * Material.Ka;
+ //   vec3 ambient = Light.La * Material.Ka;
     vec3 diffAndSpec = diffAndSpecShading();
 
     //Do shadow map lookup
@@ -198,24 +208,81 @@ void shadeWithShadow()
 
     //if the fragment is in shadow, use ambient only
     FragColour = vec4(diffAndSpec * shadow + ambient, 1.0);
-}
+}*/
 
 
 
 //________________________________________________________________________________________________________________________________________//
 
 
-subroutine (RenderPassType)
+/*subroutine (RenderPassType)
 void recordDepth()
 {
 
+}*/
+
+
+//________________________________________________________________________________________________________________________________________//
+
+
+float MicrofacetDistribution(float _roughness, float _NdotH)
+{
+    float r1 = 1.0/(4.0 * _roughness * pow(_NdotH, 4.0));
+    float r2 = (_NdotH * _NdotH - 1.0)/ (_roughness * _NdotH * _NdotH);
+    return r1 * exp(r2);
 }
 
 
 //________________________________________________________________________________________________________________________________________//
 
 
+float MicrofacetGA(float _NdotU, float _k)
+{
+    return _NdotU/((_NdotU * (1-_k)) + _k);
+}
 
+//________________________________________________________________________________________________________________________________________//
+
+float MicrofacetFresnel(float _Fo, float _VdotH)
+{
+    return _Fo + ((1 - _Fo) * pow(2, (-5.55473*_VdotH - 6.98316*_VdotH)));
+}
+
+//________________________________________________________________________________________________________________________________________//
+
+//code taken from https://www.shadertoy.com/view/Msf3WH
+vec2 hash( vec2 p ) // replace this by something better
+{
+        p = vec2( dot(p,vec2(127.1,311.7)),
+                          dot(p,vec2(269.5,183.3)) );
+
+        return -1.0 + 2.0*fract(sin(p)*43758.5453123);
+}
+
+float noise( in vec2 p )
+{
+    const float K1 = 0.366025404; // (sqrt(3)-1)/2;
+    const float K2 = 0.211324865; // (3-sqrt(3))/6;
+
+        vec2 i = floor( p + (p.x+p.y)*K1 );
+
+    vec2 a = p - i + (i.x+i.y)*K2;
+    vec2 o = step(a.yx,a.xy);
+    vec2 b = a - o + K2;
+        vec2 c = a - 1.0 + 2.0*K2;
+
+    vec3 h = max( 0.5-vec3(dot(a,a), dot(b,b), dot(c,c) ), 0.0 );
+
+        vec3 n = h*h*h*h*vec3( dot(a,hash(i+0.0)), dot(b,hash(i+o)), dot(c,hash(i+1.0)));
+
+    return dot( n, vec3(70.0) );
+
+}
+
+//end of code taken from https://www.shadertoy.com/view/Msf3WH
+
+
+//________________________________________________________________________________________________________________________________________//
 
 
 //________________________________________________________________________________________________________________________________________//
@@ -231,8 +298,8 @@ void main () {
     // Calculate the eye vector
     vec3 v = normalize(vec3(-FragmentPosition));
 
-    vec3 VP = LightPosition - FragmentPosition;
-    VP = normalize(VP);
+//    vec3 VP = LightPosition - FragmentPosition;
+//    VP = normalize(VP);
 
     vec3 lookup;
 
@@ -244,34 +311,50 @@ void main () {
 
 
     // Extract the normal from the normal map (rescale to [-1,1]
-    vec3 tgt = normalize(texture(bumpMap, FragmentTexCoord).rgb * 2.0 - 1.0);
+//   vec3 tgt = normalize(texture(bumpMap, FragmentTexCoord).rgb * 2.0 - 1.0);
 
     // The source is just up in the Z-direction
-    vec3 src = vec3(0.0, 0.0, 1.0);
+//    vec3 src = vec3(0.0, 0.0, 1.0);
 
     // Perturb the normal according to the target
-    vec3 np = rotateVector(src, tgt, n);
+//    vec3 np = rotateVector(src, tgt, n);
 
-    vec3 s;
-    if(Light.Position.w == 0.0)
+//    vec3 s;
+//    if(Light.Position.w == 0.0)
       //  s = normalize (vec3(Light.Position));
-        s = normalize (LightPosition);
-    else
+//       s = normalize (LightPosition);
+//    else
       //  s = normalize( vec3(Light.Position) - FragmentPosition );
-        s = normalize( LightPosition - FragmentPosition );
+//        s = normalize( LightPosition - FragmentPosition );
 
   //  diffAndSpecShading();
 
     // Reflect the light about the surface normal
     //vec3 r = reflect( -s, np );
-    vec3 h = normalize(v + s);
+//    vec3 h = normalize(v + s);
+
+
+/*    float NdotH = dot(n,h);
+    float NdotV = dot(n,v);
+    float NdotS = dot(n,s);
+    float VdotH = dot(v,h);
+
+    float k = pow((Material.Roughness + 1),2)/8;
+    float Fo = pow(1- VdotH, 5);
+
+    float D = MicrofacetDistribution(Material.Roughness, NdotH);
+    float nvGA = MicrofacetGA(NdotV, k);
+    float nsGA = MicrofacetGA(NdotS, k);
+    float G = nvGA * nsGA;
+    float F = MicrofacetFresnel(Fo, VdotH);*/
 
     // Compute the light from the ambient, diffuse and specular components
-    vec3 lightColour = (
-            Light.Intensity * (
-            Light.La * Material.Ka +
-            Light.Ld * Material.Kd * max( dot(s, n), 0.0 ) +
-            Light.Ls * Material.Ks * pow( max( dot(h, n), 0.0 ), Material.Shininess )));
+//    vec3 lightColour = (
+//            Light.Intensity * (
+//            Light.La * Material.Ka +
+//            Light.Ld * Material.Kd * max( dot(s, n), 0.0 ) +
+//            Light.Ls * Material.Ks * pow( max( dot(h, n), 0.0 ), Material.Shininess )));
+           // (Light.Ls * Material.Ks  * F) / NdotV));
 
     // The mipmap level is determined by log_2(resolution), so if the texture was 4x4,
     // there would be 8 mipmap levels (128x128,64x64,32x32,16x16,8x8,4x4,2x2,1x1).
@@ -285,7 +368,7 @@ void main () {
     float gloss = (1 - texture(glossMap, FragmentTexCoord*2).r) * float(envMaxLOD);
 
     // This call determines the current LOD value for the texture map
-    vec4 colour = textureLod(envMap, lookup, gloss);
+    vec4 colour = textureLod(envMap, lookup, gloss*0.01);
 
     // This call just retrieves whatever you want from the environment map
  //   vec4 colour = texture(envMap, lookup);
@@ -298,17 +381,53 @@ void main () {
 
   //  FragColour = vec4(colour, 1.0) * texture(labelMap, FragmentTexCoord);
 
-    float gamma = 2.2;
+    float gamma = 1.2;
 
-    float NdotH = dot(n,h);
+    vec3 lightIntensity = vec3(0.0);
+    for(int i = 0; i<3; ++i)
+    {
+        lightIntensity += BlinnPhong(i, n, v);
+    }
 
-    float r1 = 1.0/(4.0 * Material.Roughness * pow(NdotH, 4.0));
-    float r2 = (NdotH * NdotH - 1.0)/ (Material.Roughness * NdotH * NdotH);
-    float roughness = r1 * exp(r2);
-    FragColour =  texture(labelMap, FragmentTexCoord) * vec4(lightColour,1.0) * colour * roughness;// * shadeFactor;*/
+   // lightIntensity = BlinnPhong(0, n, v);
+
+//code taken from https://www.shadertoy.com/view/Msf3WH
+    vec2 p = gl_FragCoord.xy / iResolution.xy;
+
+        vec2 uv = p*(iResolution.x/iResolution.y);
+
+        float f = 0.0;
+
+    // left: value noise
+        if( p.x<0.6 )
+        {
+                f = noise( 16.0*uv );
+        }
+    // right: fractal noise (4 octaves)
+    else
+        {
+                uv *= 5.0;
+        mat2 m = mat2( 1.6,  1.2, -1.2,  1.6 );
+                f  = 0.5000*noise( uv ); uv = m*uv;
+                f += 0.2500*noise( uv ); uv = m*uv;
+                f += 0.1250*noise( uv ); uv = m*uv;
+                f += 0.0625*noise( uv ); uv = m*uv;
+        }
+
+        f = 0.5 + 0.5*f;
+
+    f *= smoothstep( 0.0, 0.005, abs(p.x-0.6) );
+
+    vec4 noise = vec4( f, f, f, 1.0 );
+//end of code taken from https://www.shadertoy.com/view/Msf3WH
+
+
+    FragColour = texture(labelMap, FragmentTexCoord) * vec4(lightIntensity,1.0) * colour;// * roughness;// * shadeFactor;*/
     FragColour.rgb = pow(FragColour.rgb, vec3(1.0/gamma));
+ //   FragColour = noise;
   //  FragColour *= roughness;
    // FragColour = vec4(lightColour,1.0) * colour;
-   // FragColour = colour;
+  //  FragColour = colour;
+ //   FragColour = vec4(lightIntensity,1.0) * colour;
 }
 

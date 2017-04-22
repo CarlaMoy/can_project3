@@ -12,6 +12,10 @@
 #include <ngl/MultiBufferVAO.h>
 #include <array>
 #include <glm/gtc/type_ptr.hpp>
+#include <noise/noise.h>
+
+
+
 
 
 constexpr auto CanProgram="CanProgram";
@@ -57,6 +61,10 @@ void NGLScene::initializeGL()
   glEnable(GL_DEPTH_TEST);
   // enable multisampling for smoother drawing
   glEnable(GL_MULTISAMPLE);
+
+
+
+
   // now to load the shader and set the values
   // grab an instance of shader manager
   ngl::ShaderLib *shader=ngl::ShaderLib::instance();
@@ -142,6 +150,13 @@ void NGLScene::initializeGL()
 
   // now we have associated this data we can link the shader
   shader->linkProgramObject("Shadow");
+
+  shader->use("Shadow");
+
+  initTexture(1, m_textureMap, "images/wood.jpg");
+
+  shader->setUniform("textureMap", 1);
+
   // create the primitives to draw
   ngl::VAOPrimitives *prim=ngl::VAOPrimitives::instance();
 //  prim->createSphere("sphere",0.5,50);
@@ -169,6 +184,23 @@ void NGLScene::initializeGL()
   shader->setUniform("labelMap", 2);
   shader->setUniform("bumpMap", 3);
 
+  shader->setShaderParam3f("Light[0].La", 0.5, 0.5, 0.5);
+  shader->setShaderParam3f("Light[0].Ld", 1.0, 1.0, 1.0);
+  shader->setShaderParam3f("Light[0].Ls", 1.0, 1.0, 1.0);
+  shader->setShaderParam3f("Light[0].Intensity", 1.0, 1.0, 1.0);
+  shader->setShaderParam4f("Light[1].Position",0.0, 2.0, 4.0, 1.0);
+  shader->setShaderParam3f("Light[1].La", 0.5, 0.5, 0.5);
+  shader->setShaderParam3f("Light[1].Ld", 0.1, 1.0, 1.0);
+  shader->setShaderParam3f("Light[1].Ls", 1.0, 1.0, 1.0);
+  shader->setShaderParam3f("Light[1].Intensity", 0.6, 0.6, 1.0);
+  shader->setShaderParam4f("Light[2].Position",4.0, 3.0, -1.0, 0.0);
+  shader->setShaderParam3f("Light[2].La", 0.5, 0.5, 0.5);
+  shader->setShaderParam3f("Light[2].Ld", 1.0, 0.1, 1.0);
+  shader->setShaderParam3f("Light[2].Ls", 1.0, 1.0, 1.0);
+  shader->setShaderParam3f("Light[2].Intensity", 0.8, 0.6, 0.6);
+
+  shader->setShaderParam2f("iResolution", width(), height());
+
   // Load the Obj file and create a Vertex Array Object
   m_mesh.reset(new ngl::Obj("data/can05.obj"));
   m_mesh->createVAO();
@@ -184,7 +216,7 @@ void NGLScene::initializeGL()
 
 
   // now create our FBO and texture
-  createFramebufferObject();
+  createShadowFBO();
   // we need to enable depth testing
   glEnable(GL_DEPTH_TEST);
   // set the depth comparison mode
@@ -226,7 +258,24 @@ void NGLScene::loadMatricesToShadowShader()
   shader->setShaderParamFromMat4("MV",MV);
   shader->setShaderParamFromMat4("MVP",MVP);
   shader->setShaderParamFromMat3("normalMatrix",normalMatrix);
-  shader->setShaderParam3f("LightPosition",m_lightPosition.m_x,m_lightPosition.m_y,m_lightPosition.m_z);
+  shader->setShaderParam4f("LightPosition",m_lightPosition.m_x,m_lightPosition.m_y,m_lightPosition.m_z, 1.0);
+/*  shader->setShaderParam4f("Light[0].Position",m_lightPosition.m_x,m_lightPosition.m_y,m_lightPosition.m_z, 1.0);
+  shader->setShaderParam3f("Light[0].La", 0.5, 0.5, 0.5);
+  shader->setShaderParam3f("Light[0].Ld", 1.0, 1.0, 1.0);
+  shader->setShaderParam3f("Light[0].Ls", 1.0, 1.0, 1.0);
+  shader->setShaderParam3f("Light[0].Intensity", 1.0, 1.0, 1.0);
+  shader->setShaderParam4f("Light[1].Position",-3.0, 2.0, 1.0, 1.0);
+  shader->setShaderParam3f("Light[1].La", 0.5, 0.5, 0.5);
+  shader->setShaderParam3f("Light[1].Ld", 0.2, 1.0, 1.0);
+  shader->setShaderParam3f("Light[1].Ls", 1.0, 1.0, 1.0);
+  shader->setShaderParam3f("Light[1].Intensity", 1.0, 1.0, 1.0);
+  shader->setShaderParam4f("Light[2].Position",4.0, 3.0, -1.0, 0.0);
+  shader->setShaderParam3f("Light[2].La", 0.5, 0.5, 0.5);
+  shader->setShaderParam3f("Light[2].Ld", 1.0, 0.2, 1.0);
+  shader->setShaderParam3f("Light[2].Ls", 1.0, 1.0, 1.0);
+  shader->setShaderParam3f("Light[2].Intensity", 1.0, 1.0, 1.0);*/
+
+
   shader->setShaderParam4f("inColour",1,1,1,1);
 
   // x = x* 0.5 + 0.5
@@ -308,7 +357,7 @@ void NGLScene::drawScene(std::function<void()> _shaderFunc )
     _shaderFunc();
     prim->draw("plane");
 
-    ngl::ShaderLib *shader=ngl::ShaderLib::instance();
+//    ngl::ShaderLib *shader=ngl::ShaderLib::instance();
 
     m_transform.reset();
     m_transform.setPosition(0.0f,0.0f,0.0f);
@@ -337,7 +386,7 @@ void NGLScene::paintGL()
   glEnable(GL_CULL_FACE);
 
   // bind the FBO and render offscreen to the texture
-  glBindFramebuffer(GL_FRAMEBUFFER,m_fboID);
+  glBindFramebuffer(GL_FRAMEBUFFER,m_ShadowfboID);
   // bind the texture object to 0 (off )
   glBindTexture(GL_TEXTURE_2D,0);
   // we need to render to the same size as the texture to avoid
@@ -365,10 +414,10 @@ void NGLScene::paintGL()
   glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
   // clear the screen
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  glClearColor(0.3f, 0.4f, 0.4f, 1.0f);
+  glClearColor(0.5f, 0.5f, 0.6f, 1.0f);
 
   // bind the shadow texture
-  glBindTexture(GL_TEXTURE_2D,m_textureID);
+  glBindTexture(GL_TEXTURE_2D,m_ShadowtextureID);
 
   // we need to generate the mip maps each time we bind
  // glGenerateMipmap(GL_TEXTURE_2D);
@@ -390,15 +439,15 @@ void NGLScene::paintGL()
   //----------------------------------------------------------------------------------------------------------------------
   // now we draw a cube to visualise the light
   //----------------------------------------------------------------------------------------------------------------------
-  ngl::VAOPrimitives *prim=ngl::VAOPrimitives::instance();
+//  ngl::VAOPrimitives *prim=ngl::VAOPrimitives::instance();
   ngl::ShaderLib *shader = ngl::ShaderLib::instance();
 
-  shader->use("Colour");
+ /* shader->use("Colour");
   m_transform.reset();
   m_transform.setPosition(m_lightPosition);
   ngl::Mat4 MVP=m_transform.getMatrix() *m_cam.getVPMatrix();
   shader->setShaderParamFromMat4("MVP",MVP);
-  prim->draw("cube");
+  prim->draw("cube");*/
 
   //----------------------------------------------------------------------------------------------------------------------
   // now draw the text
@@ -424,15 +473,17 @@ void NGLScene::paintGL()
   m_transform.setPosition(0.0f,0.0f,0.0f);
   m_transform.setScale(0.4,0.4,0.4);
   loadMatrices(CanProgram);
+  shader->use(CanProgram);
+  shader->setShaderParam4f("Light[0].Position",m_lightPosition.m_x,m_lightPosition.m_y,m_lightPosition.m_z, 1.0);
   m_mesh->draw();
 }
 
-void NGLScene::createFramebufferObject()
+void NGLScene::createShadowFBO()
 {
 
   // Try to use a texture depth component
-  glGenTextures(1, &m_textureID);
-  glBindTexture(GL_TEXTURE_2D, m_textureID);
+  glGenTextures(1, &m_ShadowtextureID);
+  glBindTexture(GL_TEXTURE_2D, m_ShadowtextureID);
   //glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
 
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -450,19 +501,80 @@ void NGLScene::createFramebufferObject()
   glBindTexture(GL_TEXTURE_2D, 0);
 
   // create our FBO
-  glGenFramebuffers(1, &m_fboID);
-  glBindFramebuffer(GL_FRAMEBUFFER, m_fboID);
+  glGenFramebuffers(1, &m_ShadowfboID);
+  glBindFramebuffer(GL_FRAMEBUFFER, m_ShadowfboID);
   // disable the colour and read buffers as we only want depth
   glDrawBuffer(GL_NONE);
   glReadBuffer(GL_NONE);
 
   // attach our texture to the FBO
 
-  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,GL_TEXTURE_2D, m_textureID, 0);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,GL_TEXTURE_2D, m_ShadowtextureID, 0);
 
   // switch back to window-system-provided framebuffer
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
+/*void NGLScene::createBlurFBO()
+{
+    // First delete the FBO if it has been created previously
+    glBindFramebuffer(GL_FRAMEBUFFER, m_fboId);
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER)==GL_FRAMEBUFFER_COMPLETE) {
+        glDeleteTextures(1, &m_fboTextureId);
+        glDeleteTextures(1, &m_fboDepthId);
+        glDeleteFramebuffers(1, &m_fboId);
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    // Generate a texture to write the FBO result to
+    glGenTextures(1, &m_fboTextureId);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, m_fboTextureId);
+    glTexImage2D(GL_TEXTURE_2D,
+                 0,
+                 GL_RGB,
+                 m_width,
+                 m_height,
+                 0,
+                 GL_RGB,
+                 GL_UNSIGNED_BYTE,
+                 NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    // The depth buffer is rendered to a texture buffer too
+    glGenTextures(1, &m_fboDepthId);
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, m_fboDepthId);
+    glTexImage2D(GL_TEXTURE_2D,
+                 0,
+                 GL_DEPTH_COMPONENT,
+                 m_width,
+                 m_height,
+                 0,
+                 GL_DEPTH_COMPONENT,
+                 GL_UNSIGNED_BYTE,
+                 NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    // Create the frame buffer
+    glGenFramebuffers(1, &m_fboId);
+    glBindFramebuffer(GL_FRAMEBUFFER, m_fboId);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_fboTextureId, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_fboDepthId, 0);
+
+    // Set the fragment shader output targets (DEPTH_ATTACHMENT is done automatically)
+    GLenum drawBufs[] = {GL_COLOR_ATTACHMENT0};
+    glDrawBuffers(1, drawBufs);
+
+    // Check it is ready to rock and roll
+    CheckFrameBuffer();
+
+    // Unbind the framebuffer to revert to default render pipeline
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}*/
 
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -526,7 +638,7 @@ void NGLScene::debugTexture(float _t, float _b, float _l, float _r)
   shader->use("Texture");
   ngl::Mat4 MVP=1;
   shader->setShaderParamFromMat4("MVP",MVP);
-  glBindTexture(GL_TEXTURE_2D,m_textureID);
+  glBindTexture(GL_TEXTURE_2D,m_ShadowtextureID);
 
   std::unique_ptr<ngl::AbstractVAO> quad(ngl::VAOFactory::createVAO("multiBufferVAO",GL_TRIANGLES));
   std::array<float,18> vert ;	// vertex array
@@ -668,7 +780,7 @@ void NGLScene::initEnvironmentSide(GLenum target, const char *filename)
 void NGLScene::loadMatrices(const std::string _program)
 {
     ngl::ShaderLib *shader=ngl::ShaderLib::instance();
-    GLint pid = shader->getProgramID(_program);
+ //   GLint pid = shader->getProgramID(_program);
     shader->use(_program);
     ngl::Mat4 MV;
     ngl::Mat4 MVP;
@@ -705,3 +817,63 @@ void NGLScene::loadMatrices(const std::string _program)
     ngl::Mat4 textureMatrix= model * view*proj * bias;
     shader->setShaderParamFromMat4("TextureMatrix",textureMatrix);*/
 }
+
+
+
+/*void NGLScene::createNoiseTexture()
+{
+    int width = 128;
+    int height = 128;
+    noise::module::Perlin perlinNoise;
+    // Base frequency for octave 1.
+    perlinNoise.SetFrequency(4.0);
+   // perlinNoise.SetPersistence(1.0);
+    GLubyte *data = new GLubyte[ width * height * 4 ];
+    double xRange = 1.0;
+    double yRange = 1.0;
+    double xFactor = xRange / width;
+    double yFactor = yRange / height;
+
+    for( int oct = 0; oct < 4; oct++ ) {
+      perlinNoise.SetOctaveCount(oct+1);
+      for( int i = 0; i < width; i++ ) {
+        for( int j = 0 ; j < height; j++ ) {
+          double x = xFactor * i;
+          double y = yFactor * j;
+          double z = 0.0;
+          float val = 0.0f;
+          double a, b, c, d;
+          a = perlinNoise.GetValue(x       ,y       ,z);
+          b = perlinNoise.GetValue(x+xRange,y       ,z);
+          c = perlinNoise.GetValue(x       ,y+yRange,z);
+          d = perlinNoise.GetValue(x+xRange,y+yRange,z);
+
+          double xmix = 1.0 - x / xRange;
+          double ymix = 1.0 - y / yRange;
+          double x1 = glm::mix( a, b, xmix );
+          double x2 = glm::mix( c, d, xmix );
+          val = glm::mix(x1, x2, ymix );
+          // Scale to roughly between 0 and 1
+          val = (val + 1.0f) * 0.5f;
+          // Clamp strictly between 0 and 1
+          val = val> 1.0 ? 1.0 :val;
+          val = val< 0.0 ? 0.0 :val;
+                   // Store in texture
+          data[((j * width + i) * 4) + oct] =
+            (GLubyte) ( val * 255.0f );
+            }
+        }
+    }
+    GLuint texID;
+    glGenTextures(1, &texID);
+    glBindTexture(GL_TEXTURE_2D, texID);
+    glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,width,height,0,GL_RGBA,
+                 GL_UNSIGNED_BYTE,data);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
+                    GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                    GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    delete [] data;
+}*/
