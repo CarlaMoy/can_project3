@@ -9,6 +9,8 @@ layout (location=1) in vec2 TexCoord;
 // The vertex normal attribute
 layout (location=2) in vec3 VertexNormal;
 
+
+
 // These attributes are passed onto the shader (should they all be smoothed?)
 smooth out vec3 FragmentPosition;
 smooth out vec3 FragmentNormal;

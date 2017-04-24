@@ -9,6 +9,7 @@
 #include <QOpenGLWindow>
 #include <memory>
 #include <ngl/Obj.h>
+#include <glm/vec3.hpp>
 //----------------------------------------------------------------------------------------------------------------------
 /// @file NGLScene.h
 /// @brief this class inherits from the Qt OpenGLWindow and allows us to use NGL to draw OpenGL
@@ -192,6 +193,17 @@ private:
 
     void createNoiseTexture();
 
+    void CreateGBuffer();
+
+    void createSSAOBuffers();
+
+    void createSSAOKernelNoise();
+
+    void RenderQuad();
+
+    GLfloat lerp(GLfloat a, GLfloat b, GLfloat f);
+
+
 
     /// A unique pointer storing our mesh object
     std::unique_ptr<ngl::Obj> m_mesh;
@@ -199,8 +211,21 @@ private:
     ///For the light
    // std::unique_ptr<ngl::Light> m_light;
 
-    /// The ID of our environment texture
+    /// The ID of can textures
     GLuint m_envTex, m_glossMapTex, m_labelTex, m_bumpTex, m_textureMap;
+    /// The ID of ground textures
+    GLuint m_woodTex, m_woodSpec, m_woodNorm;
+
+    GLuint m_gBuffer, m_blurFBO, m_blurTexFBO, m_blurDepthFBO, m_ssaoFBO, m_ssaoBlurFBO, m_ssaoColorBuffer, m_ssaoColorBufferBlur;
+
+    GLuint m_gPosition, m_gNormal, m_gColour,m_noiseTexture;
+
+    std::vector<glm::vec3> m_ssaoKernel;
+
+    GLuint m_SSAOID, m_CanID;
+
+    GLuint m_quadVAO;
+    GLuint m_quadVBO;
 
 
 };

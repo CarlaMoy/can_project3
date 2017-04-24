@@ -15,6 +15,12 @@ uniform vec2 iResolution;
 /// @brief our output fragment colour
 layout (location=0) out vec4 FragColour;
 
+layout (location=3) in vec4 gPosition;
+
+layout (location=4) in vec4 gNormal;
+
+layout (location=5) in vec4 gColour;
+
 //uniform vec3 LightPosition;
 
 
@@ -26,6 +32,8 @@ struct LightInfo {
     vec3 Ld;
     vec3 Ls;
     vec3 Intensity;
+    float Linear;
+    float Quadratic;
 };
 
 // We'll have a single light in the scene with some default values
@@ -86,6 +94,10 @@ uniform bool isReflect = true;
 
 // Specify the refractive index for refractions
 uniform float refractiveIndex = 1.0;
+
+float Fbias = 0.0;
+float Fscale = 0.3;
+float Fpower = 0.2; //Fresnel bias, fresnel scale and fresnel power
 
 
 
@@ -155,7 +167,31 @@ vec3 rotateVector(vec3 src, vec3 tgt, vec3 vec) {
                  Material.Kd * max( dot(s, norm), 0.0) +
                  Material.Ks * pow(max( dot(halfVec, norm), 0.0), Material.Shininess));
 }*/
+//________________________________________________________________________________________________________________________________________//
 
+
+float MicrofacetDistribution(float _roughness, float _NdotH)
+{
+    float r1 = 1.0/(4.0 * _roughness * pow(_NdotH, 4.0));
+    float r2 = (_NdotH * _NdotH - 1.0)/ (_roughness * _NdotH * _NdotH);
+    return r1 * exp(r2);
+}
+
+
+//________________________________________________________________________________________________________________________________________//
+
+
+float MicrofacetGA(float _NdotU, float _k)
+{
+    return _NdotU/((_NdotU * (1-_k)) + _k);
+}
+
+//________________________________________________________________________________________________________________________________________//
+
+float MicrofacetFresnel(float _Fo, float _VdotH)
+{
+    return _Fo + ((1 - _Fo) * pow(2, (-5.55473*_VdotH - 6.98316*_VdotH)));
+}
 //________________________________________________________________________________________________________________________________________//
 
 
@@ -184,13 +220,69 @@ vec3 BlinnPhong(int lightIndex, vec3 _n, vec3 _v)
     if(NdotS > 0.0)
     {
         specular = Light[lightIndex].Ls * Material.Ks * pow( max( dot(h, _n), 0.0 ), Material.Shininess);
+
     }
 
+    //attenuation
+    float dist = length(Light[lightIndex].Position.xyz - FragmentPosition);
+    float attenuation = 1.0/ (1.0 + Light[lightIndex].Linear * dist + Light[lightIndex].Quadratic * (dist * dist));
 
-    return Light[lightIndex].Intensity * (ambient + diffuse + specular);
+
+    return Light[lightIndex].Intensity * (ambient * attenuation + diffuse * attenuation + specular * attenuation);
 
 }
 
+//________________________________________________________________________________________________________________________________________//
+
+vec3 Microfacet(int lightIndex, vec3 _n, vec3 _v, vec4 _texturedCan, vec4 _colour)
+{
+
+
+
+    vec3 s;
+    if(Light[lightIndex].Position.w == 0.0)
+        s = normalize (vec3(Light[lightIndex].Position));
+    else
+        s = normalize( vec3(Light[lightIndex].Position) - FragmentPosition );
+
+
+    vec3 h = normalize(_v + s);
+
+    float NdotS = dot(_n,s);
+    float NdotH = dot(_n,h);
+    float NdotV = dot(_n,_v);
+  //  float NdotS = dot(n,s);
+   // float VdotH = dot(v,h);
+
+    float k = pow((Material.Roughness + 1),2)/8;
+ //   float Fo = pow(1- VdotH, 5);
+
+    float D = MicrofacetDistribution(Material.Roughness, NdotH);
+    float nvGA = MicrofacetGA(NdotV, k);
+    float nsGA = MicrofacetGA(NdotS, k);
+    float G = nvGA * nsGA;
+
+    float FresnelTerm = Fbias +Fscale * pow(1.0 + dot(_v, _n), Fpower);
+    vec4 F = mix(vec4(0.5,0.5,0.5,1.0), _colour, FresnelTerm);
+
+    float DGF = D * G * F.x * F.y * F.z;
+
+    vec3 ambient = Light[lightIndex].La * Material.Ka;
+
+    vec3 diffuse = Light[lightIndex].Ld * Material.Kd * max( NdotS, 0.0 );
+
+    vec3 specular = vec3(0.0);
+
+    if(NdotS > 0.0)
+    {
+        //specular = Light[lightIndex].Ls * Material.Ks * pow( max( dot(h, _n), 0.0 ), Material.Shininess);
+        specular = (Light[lightIndex].Ls * Material.Ks * DGF) / dot(_n,_v);
+    }
+
+
+    return Light[lightIndex].Intensity * (ambient + diffuse + specular) ;
+
+}
 
 //________________________________________________________________________________________________________________________________________//
 
@@ -222,31 +314,7 @@ void recordDepth()
 }*/
 
 
-//________________________________________________________________________________________________________________________________________//
 
-
-float MicrofacetDistribution(float _roughness, float _NdotH)
-{
-    float r1 = 1.0/(4.0 * _roughness * pow(_NdotH, 4.0));
-    float r2 = (_NdotH * _NdotH - 1.0)/ (_roughness * _NdotH * _NdotH);
-    return r1 * exp(r2);
-}
-
-
-//________________________________________________________________________________________________________________________________________//
-
-
-float MicrofacetGA(float _NdotU, float _k)
-{
-    return _NdotU/((_NdotU * (1-_k)) + _k);
-}
-
-//________________________________________________________________________________________________________________________________________//
-
-float MicrofacetFresnel(float _Fo, float _VdotH)
-{
-    return _Fo + ((1 - _Fo) * pow(2, (-5.55473*_VdotH - 6.98316*_VdotH)));
-}
 
 //________________________________________________________________________________________________________________________________________//
 
@@ -298,6 +366,8 @@ void main () {
     // Calculate the eye vector
     vec3 v = normalize(vec3(-FragmentPosition));
 
+
+
 //    vec3 VP = LightPosition - FragmentPosition;
 //    VP = normalize(VP);
 
@@ -337,16 +407,16 @@ void main () {
 /*    float NdotH = dot(n,h);
     float NdotV = dot(n,v);
     float NdotS = dot(n,s);
-    float VdotH = dot(v,h);
+   // float VdotH = dot(v,h);
 
     float k = pow((Material.Roughness + 1),2)/8;
-    float Fo = pow(1- VdotH, 5);
+ //   float Fo = pow(1- VdotH, 5);
 
     float D = MicrofacetDistribution(Material.Roughness, NdotH);
     float nvGA = MicrofacetGA(NdotV, k);
     float nsGA = MicrofacetGA(NdotS, k);
     float G = nvGA * nsGA;
-    float F = MicrofacetFresnel(Fo, VdotH);*/
+   // float F = MicrofacetFresnel(Fo, VdotH);*/
 
     // Compute the light from the ambient, diffuse and specular components
 //    vec3 lightColour = (
@@ -383,11 +453,7 @@ void main () {
 
     float gamma = 1.2;
 
-    vec3 lightIntensity = vec3(0.0);
-    for(int i = 0; i<3; ++i)
-    {
-        lightIntensity += BlinnPhong(i, n, v);
-    }
+
 
    // lightIntensity = BlinnPhong(0, n, v);
 
@@ -420,14 +486,41 @@ void main () {
 
     vec4 noise = vec4( f, f, f, 1.0 );
 //end of code taken from https://www.shadertoy.com/view/Msf3WH
+    vec4 texturedCan = texture(labelMap, FragmentTexCoord);
 
+/*    float NdotH = dot(n,h);
+    float NdotV = dot(n,v);
+    float NdotS = dot(n,s);
+   // float VdotH = dot(v,h);
 
-    FragColour = texture(labelMap, FragmentTexCoord) * vec4(lightIntensity,1.0) * colour;// * roughness;// * shadeFactor;*/
+    float k = pow((Material.Roughness + 1),2)/8;
+ //   float Fo = pow(1- VdotH, 5);
+
+    float D = MicrofacetDistribution(Material.Roughness, NdotH);
+    float nvGA = MicrofacetGA(NdotV, k);
+    float nsGA = MicrofacetGA(NdotS, k);
+    float G = nvGA * nsGA;
+
+    float FresnelTerm = Fbias +Fscale * pow(1.0 + dot(v, n), Fpower);
+    vec4 F = mix(texturedCan, colour, FresnelTerm);
+
+    float DGF = D * G * F.x;*/
+
+    vec3 lightIntensity = vec3(0.0);
+    for(int i = 0; i<3; ++i)
+    {
+     //   lightIntensity += Microfacet(i, n, v, texturedCan, colour);
+        lightIntensity += BlinnPhong(i, n, v);
+    }
+
+    FragColour = texturedCan * vec4(lightIntensity,1.0) * colour;// * roughness;// * shadeFactor;*/
+   // FragColour = vec4(lightIntensity,1.0);
     FragColour.rgb = pow(FragColour.rgb, vec3(1.0/gamma));
  //   FragColour = noise;
   //  FragColour *= roughness;
    // FragColour = vec4(lightColour,1.0) * colour;
   //  FragColour = colour;
- //   FragColour = vec4(lightIntensity,1.0) * colour;
+ //   FragColour = vec4(lightIntensity,1.0);
+   // FragColour = vec4(0.2,0.2,0.7,1.0);
 }
 
