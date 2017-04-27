@@ -227,6 +227,8 @@ private:
     GLuint m_quadVAO;
     GLuint m_quadVBO;
 
+    unsigned int m_pingpongFBO, m_pingpongColourBuffers;
+
 
 };
 

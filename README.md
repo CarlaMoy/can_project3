@@ -9,7 +9,7 @@ deferred shading
 make plane in maya with uvs and test wood texture then apply in opengl
 get wood with normal map
 
-attenuation learn opengl
+attenuation learn opengl https://imdoingitwrong.wordpress.com/2011/01/31/light-attenuation/
 
 implement fresnel: http://kylehalladay.com/blog/tutorial/2014/02/18/Fresnel-Shaders-From-The-Ground-Up.html
 

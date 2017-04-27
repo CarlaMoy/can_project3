@@ -99,6 +99,8 @@ float Fbias = 0.0;
 float Fscale = 0.3;
 float Fpower = 0.2; //Fresnel bias, fresnel scale and fresnel power
 
+vec3 GroundColour = vec3(0.3, 0.15,0.1);
+
 
 
 //________________________________________________________________________________________________________________________________________//
@@ -211,9 +213,13 @@ vec3 BlinnPhong(int lightIndex, vec3 _n, vec3 _v)
 
     float NdotS = dot(_n,s);
 
+    float a = NdotS;// * 0.5 + 0.5;
+
+    vec3 diffuse = mix(GroundColour, Light[lightIndex].Intensity, a) * Light[lightIndex].Ld * Material.Kd; //Hemisphere lighting, taken from OpenGL Programming Guide, Eight Edition
+
     vec3 ambient = Light[lightIndex].La * Material.Ka;
 
-    vec3 diffuse = Light[lightIndex].Ld * Material.Kd * max( NdotS, 0.0 );
+  //  vec3 diffuse = Light[lightIndex].Ld * Material.Kd * max( NdotS, 0.0 );
 
     vec3 specular = vec3(0.0);
 
@@ -228,7 +234,7 @@ vec3 BlinnPhong(int lightIndex, vec3 _n, vec3 _v)
     float attenuation = 1.0/ (1.0 + Light[lightIndex].Linear * dist + Light[lightIndex].Quadratic * (dist * dist));
 
 
-    return Light[lightIndex].Intensity * (ambient * attenuation + diffuse * attenuation + specular * attenuation);
+    return Light[lightIndex].Intensity * (ambient + diffuse + specular*6) * attenuation;
 
 }
 
@@ -276,11 +282,15 @@ vec3 Microfacet(int lightIndex, vec3 _n, vec3 _v, vec4 _texturedCan, vec4 _colou
     if(NdotS > 0.0)
     {
         //specular = Light[lightIndex].Ls * Material.Ks * pow( max( dot(h, _n), 0.0 ), Material.Shininess);
-        specular = (Light[lightIndex].Ls * Material.Ks * DGF) / dot(_n,_v);
+        specular = ((Light[lightIndex].Ls * Material.Ks * DGF) / max(dot(h, _n), 0));
     }
 
+    //attenuation
+    float dist = length(Light[lightIndex].Position.xyz - FragmentPosition);
+    float attenuation = 1.0/ (1.0 + Light[lightIndex].Linear * dist + Light[lightIndex].Quadratic * (dist * dist));
 
-    return Light[lightIndex].Intensity * (ambient + diffuse + specular) ;
+
+    return Light[lightIndex].Intensity * (ambient + diffuse + specular * 5) * attenuation;
 
 }
 
@@ -512,6 +522,8 @@ void main () {
      //   lightIntensity += Microfacet(i, n, v, texturedCan, colour);
         lightIntensity += BlinnPhong(i, n, v);
     }
+
+
 
     FragColour = texturedCan * vec4(lightIntensity,1.0) * colour;// * roughness;// * shadeFactor;*/
    // FragColour = vec4(lightIntensity,1.0);

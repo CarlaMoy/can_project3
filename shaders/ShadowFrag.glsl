@@ -105,7 +105,7 @@ vec3 BlinnPhong(int lightIndex, vec3 _n, vec3 _v)
     float attenuation = 1.0/ (1.0 + Light[lightIndex].Linear * dist + Light[lightIndex].Quadratic * (dist * dist));
 
 
-    return Light[lightIndex].Intensity * (ambient * attenuation + diffuse * attenuation + specular * attenuation);
+    return Light[lightIndex].Intensity * (ambient + diffuse + specular) * attenuation;
 
 }
 
@@ -191,7 +191,7 @@ void main ()
       lightIntensity += BlinnPhong(i, n, v);
   }
 
-  outColour= shadeFactor * vec4(lightIntensity, 1.0) * 30 * woodDiffuse;// * texture(textureMap, FragmentTexCoord);
+  outColour= shadeFactor * vec4(lightIntensity, 1.0) * 2 * woodDiffuse;// * texture(textureMap, FragmentTexCoord);
 //  outColour = vec4(0.2,0.2,0.6,1.0);
  // outColour = vec4(shadeFactor* vec4(1.0,1.0,0.0,1.0));
   //outColour=vec4(ShadowCoord);
