@@ -25,12 +25,12 @@ constexpr auto PlaneProgram="PlaneProgram";
 
 NGLScene::NGLScene()
 {
-   m_animate=true;
-   m_lightPosition.set(8,4,8);
-   m_lightYPos=4.0;
-   m_lightXoffset=8.0;
-   m_lightZoffset=8.0;
-   setTitle("Can Project");
+  m_animate=true;
+  m_lightPosition.set(8,4,8);
+  m_lightYPos=4.0;
+  m_lightXoffset=8.0;
+  m_lightZoffset=8.0;
+  setTitle("Can Project");
 }
 
 //________________________________________________________________________________________________________________________________________//
@@ -99,7 +99,7 @@ void NGLScene::initializeGL()
   // it is not passed to the shader directly
   m_lightAngle=0.0f;
 
-//________________________________________________________________________________________________________________________________________//
+  //________________________________________________________________________________________________________________________________________//
 
   // Initialise our environment map here
   initEnvironment();
@@ -114,7 +114,7 @@ void NGLScene::initializeGL()
   initTexture(6, m_woodNorm, "images/woodNorm.jpg");
 
 
-//________________________________________________________________________________________________________________________________________//
+  //________________________________________________________________________________________________________________________________________//
 
   // we are creating a shader called gBuffer
   shader->createShaderProgram("gBuffer");
@@ -141,7 +141,7 @@ void NGLScene::initializeGL()
   glUniform1i(glGetUniformLocation(gBufferID, "gColour"), 5);
   shader->setUniform("labelMap", 2);
 
-//________________________________________________________________________________________________________________________________________//
+  //________________________________________________________________________________________________________________________________________//
 
   // we are creating a shader called SSAO
   shader->createShaderProgram("SSAO");
@@ -166,7 +166,28 @@ void NGLScene::initializeGL()
   glUniform1i(glGetUniformLocation(m_SSAOID, "gNormal"), 4);
   glUniform1i(glGetUniformLocation(m_SSAOID, "texNoise"), 7);
 
-//________________________________________________________________________________________________________________________________________//
+  //________________________________________________________________________________________________________________________________________//
+
+  /* // we are creating a shader called Lights
+  shader->createShaderProgram("Lights");
+  // now we are going to create empty shaders for Frag and Vert
+  shader->attachShader("LightsVertex",ngl::ShaderType::VERTEX);
+  shader->attachShader("LightsFragment",ngl::ShaderType::FRAGMENT);
+  // attach the source
+  shader->loadShaderSource("LightsVertex","shaders/LightingVert.glsl");
+  shader->loadShaderSource("LightsFragment","shaders/LightingFrag.glsl");
+  // compile the shaders
+  shader->compileShader("LightsVertex");
+  shader->compileShader("LightsFragment");
+  // add them to the program
+  shader->attachShaderToProgram("Lights","LightsVertex");
+  shader->attachShaderToProgram("Lights","LightsFragment");
+
+  // now we have associated this data we can link the shader
+  shader->linkProgramObject("Lights");*/
+
+  //________________________________________________________________________________________________________________________________________//
+
 
 
   // we are creating a shader called SSAOBlur
@@ -187,7 +208,7 @@ void NGLScene::initializeGL()
   // now we have associated this data we can link the shader
   shader->linkProgramObject("SSAOBlur");
 
-//________________________________________________________________________________________________________________________________________//
+  //________________________________________________________________________________________________________________________________________//
 
   // we are creating a shader called DOF
   shader->createShaderProgram("DOF");
@@ -207,8 +228,28 @@ void NGLScene::initializeGL()
   // now we have associated this data we can link the shader
   shader->linkProgramObject("DOF");
 
+  //________________________________________________________________________________________________________________________________________//
 
-//________________________________________________________________________________________________________________________________________//
+
+  // we are creating a shader called DOFFinal
+  shader->createShaderProgram("DOFFinal");
+  // now we are going to create empty shaders for Frag and Vert
+  shader->attachShader("DOFFinalVertex",ngl::ShaderType::VERTEX);
+  shader->attachShader("DOFFinalFragment",ngl::ShaderType::FRAGMENT);
+  // attach the source
+  shader->loadShaderSource("DOFFinalVertex","shaders/DOFFinalVert.glsl");
+  shader->loadShaderSource("DOFFinalFragment","shaders/DOFFinalFrag.glsl");
+  // compile the shaders
+  shader->compileShader("DOFFinalVertex");
+  shader->compileShader("DOFFinalFragment");
+  // add them to the program
+  shader->attachShaderToProgram("DOFFinal","DOFFinalVertex");
+  shader->attachShaderToProgram("DOFFinal","DOFFinalFragment");
+
+  // now we have associated this data we can link the shader
+  shader->linkProgramObject("DOFFinal");
+
+  //________________________________________________________________________________________________________________________________________//
 
   // we are creating a shader called Colour
   shader->createShaderProgram("Colour");
@@ -232,7 +273,7 @@ void NGLScene::initializeGL()
   shader->setShaderParam4f("Colour",1,0,0,1);
 
 
-//________________________________________________________________________________________________________________________________________//
+  //________________________________________________________________________________________________________________________________________//
 
   // we are creating a shader called Shadow
   shader->createShaderProgram("Shadow");
@@ -258,11 +299,11 @@ void NGLScene::initializeGL()
   shader->setUniform("difMap", 5);
   shader->setUniform("normMap", 6);
 
- // shader->use("Shadow");
+  // shader->use("Shadow");
 
- // initTexture(1, m_textureMap, "images/wood.jpg");
+  // initTexture(1, m_textureMap, "images/wood.jpg");
 
- // shader->setUniform("textureMap", 1);
+  // shader->setUniform("textureMap", 1);
 
   // create the primitives to draw
   ngl::VAOPrimitives *prim=ngl::VAOPrimitives::instance();
@@ -270,7 +311,7 @@ void NGLScene::initializeGL()
   prim->createTrianglePlane("plane",80,80,80,80,ngl::Vec3(0,1,0));
 
 
-//________________________________________________________________________________________________________________________________________//
+  //________________________________________________________________________________________________________________________________________//
 
   shader->loadShader(CanProgram,
                      "shaders/CanVert.glsl",
@@ -310,7 +351,7 @@ void NGLScene::initializeGL()
   shader->setShaderParam3f("Light[2].Intensity", 5.0, 0.6, 0.6);
   shader->setShaderParam1f("Light[2].Linear", 0.7);
   shader->setShaderParam1f("Light[2].Quadratic", 1.8); //linear and quadratic values for attenuation from
-                                                         //http://www.ogre3d.org/tikiwiki/tiki-index.php?page=-Point+Light+Attenuation
+  //http://www.ogre3d.org/tikiwiki/tiki-index.php?page=-Point+Light+Attenuation
 
   shader->setShaderParam2f("iResolution", width(), height());
 
@@ -319,7 +360,7 @@ void NGLScene::initializeGL()
   m_mesh->createVAO();
 
 
-//________________________________________________________________________________________________________________________________________//
+  //________________________________________________________________________________________________________________________________________//
 
 
   // create shadow FBO
@@ -334,7 +375,9 @@ void NGLScene::initializeGL()
 
   createBlurFBO();
 
-//________________________________________________________________________________________________________________________________________//
+
+
+  //________________________________________________________________________________________________________________________________________//
 
 
 
@@ -375,8 +418,8 @@ void NGLScene::loadMatricesToShadowShader()
   MVP= M*m_cam.getVPMatrix();
   normalMatrix=MV;
   normalMatrix = normalMatrix.inverse();
- // shader->setShaderParamFromMat4("M",M);
-// shader->setShaderParamFromMat4("MV",MV);
+  // shader->setShaderParamFromMat4("M",M);
+  // shader->setShaderParamFromMat4("MV",MV);
   shader->setShaderParamFromMat4("MVP",MVP);
   shader->setShaderParamFromMat3("normalMatrix",normalMatrix);
   shader->setShaderParam4f("Light[0].Position",m_lightPosition.m_x,m_lightPosition.m_y,m_lightPosition.m_z, 1.0);
@@ -402,7 +445,7 @@ void NGLScene::loadMatricesToShadowShader()
   shader->setShaderParam1f("Light[2].Quadratic", 1.8);
 
 
- // shader->setShaderParam4f("inColour",1,1,1,1);
+  // shader->setShaderParam4f("inColour",1,1,1,1);
 
   // x = x* 0.5 + 0.5
   // y = y* 0.5 + 0.5
@@ -416,11 +459,11 @@ void NGLScene::loadMatricesToShadowShader()
   ngl::Mat4 proj=m_lightCamera.getProjectionMatrix();
   ngl::Mat4 model=m_transform.getMatrix();
 
-//  ngl::Mat4 lightSpaceMatrix = model * view * proj * bias;
+  //  ngl::Mat4 lightSpaceMatrix = model * view * proj * bias;
 
   ngl::Mat4 textureMatrix= model * view*proj * bias;
   shader->setShaderParamFromMat4("textureMatrix",textureMatrix);
- // shader->setShaderParamFromMat4("lightSpaceMatrix",lightSpaceMatrix);
+  // shader->setShaderParamFromMat4("lightSpaceMatrix",lightSpaceMatrix);
 }
 
 //________________________________________________________________________________________________________________________________________//
@@ -452,23 +495,23 @@ void NGLScene::drawScene(std::function<void()> _shaderFunc )
   m_mouseGlobalTX.m_m[3][1] = m_modelPos.m_y;
   m_mouseGlobalTX.m_m[3][2] = m_modelPos.m_z;
 
-//________________________________________________________________________________________________________________________________________//
+  //________________________________________________________________________________________________________________________________________//
 
-   // get the VBO instance
+  // get the VBO instance
   ngl::VAOPrimitives *prim=ngl::VAOPrimitives::instance();
 
 
-    m_transform.reset();
-    m_transform.setPosition(0.0f,0.0f,0.0f);
-    _shaderFunc();
-    prim->draw("plane");
-//________________________________________________________________________________________________________________________________________//
+  m_transform.reset();
+  m_transform.setPosition(0.0f,0.0f,0.0f);
+  _shaderFunc();
+  prim->draw("plane");
+  //________________________________________________________________________________________________________________________________________//
 
-    m_transform.reset();
-    m_transform.setPosition(0.0f,0.0f,0.0f);
-    m_transform.setScale(0.4,0.4,0.4);
-    _shaderFunc();
-    m_mesh->draw();
+  m_transform.reset();
+  m_transform.setPosition(0.0f,0.0f,0.0f);
+  m_transform.setScale(0.4,0.4,0.4);
+  _shaderFunc();
+  m_mesh->draw();
 
 }
 
@@ -477,13 +520,20 @@ void NGLScene::drawScene(std::function<void()> _shaderFunc )
 
 void NGLScene::paintGL()
 {
-    ngl::VAOPrimitives *prim=ngl::VAOPrimitives::instance();
-    ngl::ShaderLib *shader=ngl::ShaderLib::instance();
-// 1. Geometry Pass: render scene's geometry/color data into gbuffer
-/*    glBindFramebuffer(GL_FRAMEBUFFER, m_gBuffer);
+  ngl::VAOPrimitives *prim=ngl::VAOPrimitives::instance();
+  ngl::ShaderLib *shader=ngl::ShaderLib::instance();
+
+
+
+
+  /*// 1. Geometry Pass: render scene's geometry/color data into gbuffer
+    glBindFramebuffer(GL_FRAMEBUFFER, m_gBuffer);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    loadMatrices("gBuffer");
+   // loadMatrices("gBuffer");
     shader->use("gBuffer");
+    shader->setShaderParamFromMat4("projection", m_cam.getProjectionMatrix());
+    shader->setShaderParamFromMat4("model", ngl::Mat4(0.0));
+    shader->setShaderParamFromMat4("view", m_cam.getViewMatrix());
     m_mesh->draw();
     prim->draw("plane");
 
@@ -494,6 +544,13 @@ void NGLScene::paintGL()
     glBindFramebuffer(GL_FRAMEBUFFER, m_ssaoFBO);
         glClear(GL_COLOR_BUFFER_BIT);
         shader->use("SSAO");
+        for (unsigned int i = 0; i < 64; ++i)
+        {
+            const std::string sampleList = "samples[" + std::to_string(i) + "]";
+            shader->setShaderParam3f(sampleList, m_ssaoKernel[i]);
+        }
+
+        shader->setShaderParamFromMat4("projection", m_cam.getProjectionMatrix());
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, m_gPosition);
         glActiveTexture(GL_TEXTURE1);
@@ -502,9 +559,7 @@ void NGLScene::paintGL()
         glBindTexture(GL_TEXTURE_2D, m_noiseTexture);
         // Send kernel + rotation
         for (GLuint i = 0; i < 64; ++i)
-            glUniform3fv(glGetUniformLocation(m_SSAOID, ("samples[" + std::to_string(i) + "]").c_str()), 1, &m_ssaoKernel[i][0]);
-  //      glUniformMatrix4fv(glGetUniformLocation(m_SSAOID, "projection"), 1, GL_FALSE, m_cam.getProjectionMatrix());
-        shader->setShaderParamFromMat4("projection",m_cam.getProjectionMatrix());
+
         RenderQuad();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -518,8 +573,29 @@ void NGLScene::paintGL()
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    shader->use("Light");
+    // send light relevant uniforms
+    ngl::Vec4 lightPosView = m_cam.getViewMatrix() * ngl::Vec4(m_lightPos, 1.0);
+    shader->setShaderParam4f("light.Position", lightPosView);
+    shader->setShaderParam3f("light.Color", m_lightColor);
+    // Update attenuation parameters
+    const float constant  = 1.0; // note that we don't send this to the shader, we assume it is always 1.0 (in our case)
+    const float linear    = 0.09;
+    const float quadratic = 0.032;
+    shader->setShaderParam1f("light.Linear", linear);
+    shader->setShaderParam1f("light.Quadratic", quadratic);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, m_gPosition);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, m_gNormal);
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, m_gColour);
+    glActiveTexture(GL_TEXTURE3); // add extra SSAO texture to lighting pass
+    glBindTexture(GL_TEXTURE_2D, m_ssaoColorBufferBlur);
+    RenderQuad();*/
 
-// 4. Lighting Pass: traditional deferred Blinn-Phong lighting now with added screen-space ambient occlusion
+  /*// 4. Lighting Pass: traditional deferred Blinn-Phong lighting now with added screen-space ambient occlusion
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     shader->use(CanProgram);
     glActiveTexture(GL_TEXTURE0);
@@ -555,7 +631,7 @@ void NGLScene::paintGL()
 
 
 
-//________________________________________________________________________________________________________________________________________//
+  //________________________________________________________________________________________________________________________________________//
 
   //----------------------------------------------------------------------------------------------------------------------
   // Pass 1 render our Depth texture to the FBO
@@ -581,10 +657,10 @@ void NGLScene::paintGL()
   // draw the scene from the POV of the light using the function we need
   drawScene(std::bind(&NGLScene::loadToLightPOVShader,this));
 
-//________________________________________________________________________________________________________________________________________//
+  //________________________________________________________________________________________________________________________________________//
 
-/*  // Bind the FBO to specify an alternative render target
-  glBindFramebuffer(GL_FRAMEBUFFER, m_blurFBO);
+  // Bind the FBO to specify an alternative render target
+  /*  glBindFramebuffer(GL_FRAMEBUFFER, m_blurFBO);
 
   // Set up the viewport
   glViewport(0,0,width(),height());
@@ -598,13 +674,13 @@ void NGLScene::paintGL()
   loadMatrices(CanProgram);
   shader->use(CanProgram);
   shader->setShaderParam4f("Light[0].Position",m_lightPosition.m_x,m_lightPosition.m_y,m_lightPosition.m_z, 1.0);
-  m_mesh->draw();
+  m_mesh->draw();*/
 
 
-//________________________________________________________________________________________________________________________________________//
+  //________________________________________________________________________________________________________________________________________//
 
   // Unbind our FBO
-  glBindFramebuffer(GL_FRAMEBUFFER,0);
+  /*  glBindFramebuffer(GL_FRAMEBUFFER,0);
 
   // Find the depth of field shader
   glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -629,19 +705,19 @@ void NGLScene::paintGL()
 
   shader->setShaderParamFromMat4("MVP", MVP);
 
-  prim->draw("plane");
-
-*/
+  prim->draw("plane");*/
 
 
-    //----------------------------------------------------------------------------------------------------------------------
+
+
+  //----------------------------------------------------------------------------------------------------------------------
   // Pass two use the texture
   // now we have created the texture for shadows render the scene properly
   //----------------------------------------------------------------------------------------------------------------------
   // go back to our normal framebuffer
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  glBindFramebuffer(GL_FRAMEBUFFER, m_blurFBO);
 
- // glBindFramebuffer(GL_FRAMEBUFFER, m_blurFBO);
+  // glBindFramebuffer(GL_FRAMEBUFFER, m_blurFBO);
   // set the viewport to the screen dimensions
   glViewport(0, 0, width() * devicePixelRatio(), height() * devicePixelRatio());
   // enable colour rendering again (as we turned it off earlier)
@@ -655,7 +731,7 @@ void NGLScene::paintGL()
 
 
   // we need to generate the mip maps each time we bind
- // glGenerateMipmap(GL_TEXTURE_2D);
+  // glGenerateMipmap(GL_TEXTURE_2D);
 
   // now only cull back faces
   glDisable(GL_CULL_FACE);
@@ -669,8 +745,8 @@ void NGLScene::paintGL()
   // this draws the debug texture on the quad
   //----------------------------------------------------------------------------------------------------------------------
 
- // glBindTexture(GL_TEXTURE_2D,m_textureID);
- // debugTexture(-0.6f,-1,0.6f,1);
+  // glBindTexture(GL_TEXTURE_2D,m_textureID);
+  // debugTexture(-0.6f,-1,0.6f,1);
 
 
 
@@ -682,9 +758,9 @@ void NGLScene::paintGL()
   glDisable(GL_CULL_FACE);
 
   QString text=QString("Light Position [%1,%2,%3]")
-                      .arg(m_lightPosition.m_x)
-                      .arg(m_lightPosition.m_y)
-                      .arg(m_lightPosition.m_z);
+      .arg(m_lightPosition.m_x)
+      .arg(m_lightPosition.m_y)
+      .arg(m_lightPosition.m_z);
 
   m_text->setColour(1,1,1);
   m_text->renderText(250,20,text);
@@ -709,11 +785,11 @@ void NGLScene::paintGL()
   m_mesh->draw();
 
 
-//________________________________________________________________________________________________________________________________________//
+  //________________________________________________________________________________________________________________________________________//
 
 
   // Unbind our FBO
-/*  glBindFramebuffer(GL_FRAMEBUFFER,0);
+/*    glBindFramebuffer(GL_FRAMEBUFFER,0);
 
   // Find the depth of field shader
   glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -722,6 +798,8 @@ void NGLScene::paintGL()
   // Now bind our rendered image which should be in the frame buffer for the next render pass
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, m_blurTexFBO);
+
+
   glActiveTexture(GL_TEXTURE1);
   glBindTexture(GL_TEXTURE_2D, m_blurDepthFBO);
 
@@ -742,20 +820,30 @@ void NGLScene::paintGL()
   RenderQuad();*/
 
 
-/*  bool horizontal = true, first_iteration = true;
+  bool horizontal = true, first_iteration = true;
   unsigned int amount = 10;
   shader->use("DOF");
   for (unsigned int i = 0; i < amount; i++)
   {
-      glBindFramebuffer(GL_FRAMEBUFFER, m_pingpongFBO[horizontal]);
-      shader->setRegisteredUniform1i("horizontal", horizontal);
-      glBindTexture(GL_TEXTURE_2D, first_iteration ? m_blurTexFBO : m_pingpongColourbuffers[!horizontal]);  // bind texture of other framebuffer (or scene if first iteration)
-      RenderQuad();
-      horizontal = !horizontal;
-      if (first_iteration)
-          first_iteration = false;
+    glBindFramebuffer(GL_FRAMEBUFFER, m_pingpongFBO[horizontal]);
+    shader->setRegisteredUniform1i("horizontal", horizontal);
+    glBindTexture(GL_TEXTURE_2D, first_iteration ? m_blurTexFBO : m_pingpongColourBuffers[!horizontal]);  // bind texture of other framebuffer (or scene if first iteration)
+    RenderQuad();
+    horizontal = !horizontal;
+    if (first_iteration)
+      first_iteration = false;
   }
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);*/
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  shader->use("DOFFinal");
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, m_pingpongFBO[0]);
+  glActiveTexture(GL_TEXTURE1);
+  glBindTexture(GL_TEXTURE_2D, m_pingpongColourBuffers[!horizontal]);
+  // glUniform1i(glGetUniformLocation(shaderBloomFinal.Program, "bloom"), bloom);
+  //glUniform1f(glGetUniformLocation(shaderBloomFinal.Program, "exposure"), exposure);
+  RenderQuad();
 }
 
 //________________________________________________________________________________________________________________________________________//
@@ -805,14 +893,14 @@ void NGLScene::createShadowFBO()
 
 void NGLScene::createBlurFBO()
 {
- /*   // First delete the FBO if it has been created previously
+      // First delete the FBO if it has been created previously
     glBindFramebuffer(GL_FRAMEBUFFER, m_blurFBO);
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER)==GL_FRAMEBUFFER_COMPLETE) {
         glDeleteTextures(1, &m_blurTexFBO);
         glDeleteTextures(1, &m_blurDepthFBO);
         glDeleteFramebuffers(1, &m_blurFBO);
     }
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);*/
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     // Generate a texture to write the FBO result to
     glGenTextures(1, &m_blurTexFBO);
@@ -862,32 +950,58 @@ void NGLScene::createBlurFBO()
     GLenum drawBufs[] = {GL_COLOR_ATTACHMENT0};
     glDrawBuffers(1, drawBufs);
 
-    // Check it is ready to rock and roll
- //   CheckFrameBuffer();
+  // Check it is ready to rock and roll
+  //   CheckFrameBuffer();
 
-    // Unbind the framebuffer to revert to default render pipeline
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  // Unbind the framebuffer to revert to default render pipeline
+/*  glGenFramebuffers(1, &m_blurFBO);
+  glBindFramebuffer(GL_FRAMEBUFFER, m_blurFBO);
+
+  glGenTextures(1, m_blurTexFBO);
+  glBindTexture(GL_TEXTURE_2D, m_blurTexFBO);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width(), height(), 0, GL_RGB, GL_FLOAT, NULL);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);  // We clamp to the edge as the blur filter would otherwise sample repeated texture values!
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  // attach texture to framebuffer
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_blurTexFBO, 0);
+
+  GLuint m_blurDepthFBO;
+  glGenRenderbuffers(1, &m_blurDepthFBO);
+  glBindRenderbuffer(GL_RENDERBUFFER, m_blurDepthFBO);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width(), height());
+  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_blurDepthFBO);
+  // - Tell OpenGL which color attachments we'll use (of this framebuffer) for rendering
+  GLuint attachments[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
+  glDrawBuffers(2, attachments);
+  // - Finally check if framebuffer is complete
+  if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+    std::cout << "Framebuffer not complete!" << std::endl;
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);*/
 
 
-/*    // ping-pong-framebuffer for blurring
-        unsigned int m_pingpongFBO[2];
-        unsigned int m_pingpongColourbuffers[2];
-        glGenFramebuffers(2, m_pingpongFBO);
-        glGenTextures(2, m_pingpongColourbuffers);
-        for (unsigned int i = 0; i < 2; i++)
-        {
-            glBindFramebuffer(GL_FRAMEBUFFER, m_pingpongFBO[i]);
-            glBindTexture(GL_TEXTURE_2D, m_pingpongColorbuffers[i]);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGB, GL_FLOAT, NULL);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // we clamp to the edge as the blur filter would otherwise sample repeated texture values!
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_pingpongColourbuffers[i], 0);
-            // also check if framebuffers are complete (no need for depth buffer)
-            if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-                std::cout << "Framebuffer not complete!" << std::endl;
-        }*/
+
+
+  // ping-pong-framebuffer for blurring
+  //  unsigned int m_pingpongFBO[2];
+  //  unsigned int m_pingpongColourbuffers[2];
+  glGenFramebuffers(2, m_pingpongFBO);
+  glGenTextures(2, m_pingpongColourBuffers);
+  for (unsigned int i = 0; i < 2; i++)
+  {
+    glBindFramebuffer(GL_FRAMEBUFFER, m_pingpongFBO[i]);
+    glBindTexture(GL_TEXTURE_2D, m_pingpongColourBuffers[i]);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width(), height(), 0, GL_RGB, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // we clamp to the edge as the blur filter would otherwise sample repeated texture values!
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_pingpongColourBuffers[i], 0);
+    // also check if framebuffers are complete (no need for depth buffer)
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+      std::cout << "Framebuffer not complete!" << std::endl;
+  }
 }
 
 //________________________________________________________________________________________________________________________________________//
@@ -902,13 +1016,13 @@ void NGLScene::keyPressEvent(QKeyEvent *_event)
   {
   // escape key to quite
   case Qt::Key_Escape : QGuiApplication::exit(EXIT_SUCCESS); break;
-  // turn on wirframe rendering
+    // turn on wirframe rendering
   case Qt::Key_W : glPolygonMode(GL_FRONT_AND_BACK,GL_LINE); break;
-  // turn off wire frame
+    // turn off wire frame
   case Qt::Key_S : glPolygonMode(GL_FRONT_AND_BACK,GL_FILL); break;
-  // show full screen
+    // show full screen
   case Qt::Key_F : showFullScreen(); break;
-  // show windowed
+    // show windowed
   case Qt::Key_N : showNormal(); break;
   case Qt::Key_Space : toggleAnimation(); break;
   case Qt::Key_Left : changeLightXOffset(-0.1f); break;
@@ -922,7 +1036,7 @@ void NGLScene::keyPressEvent(QKeyEvent *_event)
   }
   // finally update the GLWindow and re-draw
   //if (isExposed())
-    update();
+  update();
 }
 
 //________________________________________________________________________________________________________________________________________//
@@ -941,12 +1055,12 @@ void NGLScene::updateLight()
 
 void NGLScene::timerEvent(QTimerEvent *_event )
 {
-// if the timer is the light timer call the update light method
+  // if the timer is the light timer call the update light method
   if(_event->timerId() == m_lightTimer && m_animate==true)
   {
     updateLight();
   }
-    // re-draw GL
+  // re-draw GL
   update();
 }
 
@@ -996,35 +1110,35 @@ void NGLScene::debugTexture(float _t, float _b, float _l, float _r)
 //________________________________________________________________________________________________________________________________________//
 
 void NGLScene::initTexture(const GLuint& texUnit, GLuint &texId, const char *filename) {
-    // Set our active texture unit
-    glActiveTexture(GL_TEXTURE0 + texUnit);
+  // Set our active texture unit
+  glActiveTexture(GL_TEXTURE0 + texUnit);
 
-    // Load up the image using NGL routine
-    ngl::Image img(filename);
+  // Load up the image using NGL routine
+  ngl::Image img(filename);
 
-    // Create storage for our new texture
-    glGenTextures(1, &texId);
+  // Create storage for our new texture
+  glGenTextures(1, &texId);
 
-    // Bind the current texture
-    glBindTexture(GL_TEXTURE_2D, texId);
+  // Bind the current texture
+  glBindTexture(GL_TEXTURE_2D, texId);
 
-    // Transfer image data onto the GPU using the teximage2D call
-    glTexImage2D (
-                GL_TEXTURE_2D,    // The target (in this case, which side of the cube)
-                0,                // Level of mipmap to load
-                img.format(),     // Internal format (number of colour components)
-                img.width(),      // Width in pixels
-                img.height(),     // Height in pixels
-                0,                // Border
-                GL_RGB,          // Format of the pixel data
-                GL_UNSIGNED_BYTE, // Data type of pixel data
-                img.getPixels()); // Pointer to image data in memory
+  // Transfer image data onto the GPU using the teximage2D call
+  glTexImage2D (
+        GL_TEXTURE_2D,    // The target (in this case, which side of the cube)
+        0,                // Level of mipmap to load
+        img.format(),     // Internal format (number of colour components)
+        img.width(),      // Width in pixels
+        img.height(),     // Height in pixels
+        0,                // Border
+        GL_RGB,          // Format of the pixel data
+        GL_UNSIGNED_BYTE, // Data type of pixel data
+        img.getPixels()); // Pointer to image data in memory
 
-    // Set up parameters for our texture
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  // Set up parameters for our texture
+  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 }
 
 //________________________________________________________________________________________________________________________________________//
@@ -1034,45 +1148,45 @@ void NGLScene::initTexture(const GLuint& texUnit, GLuint &texId, const char *fil
  * @brief Scene::initEnvironment in texture unit 0
  */
 void NGLScene::initEnvironment() {
-    // Enable seamless cube mapping
-    glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+  // Enable seamless cube mapping
+  glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
-    // Placing our environment map texture in texture unit 0
-    glActiveTexture (GL_TEXTURE0);
+  // Placing our environment map texture in texture unit 0
+  glActiveTexture (GL_TEXTURE0);
 
-    // Generate storage and a reference for our environment map texture
-    glGenTextures (1, &m_envTex);
+  // Generate storage and a reference for our environment map texture
+  glGenTextures (1, &m_envTex);
 
-    // Bind this texture to the active texture unit
-    glBindTexture(GL_TEXTURE_CUBE_MAP, m_envTex);
+  // Bind this texture to the active texture unit
+  glBindTexture(GL_TEXTURE_CUBE_MAP, m_envTex);
 
-    // Now load up the sides of the cube
-    initEnvironmentSide(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, "images/sky_zneg.png");
-    initEnvironmentSide(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, "images/sky_zpos.png");
-    initEnvironmentSide(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, "images/sky_ypos.png");
-    initEnvironmentSide(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, "images/sky_yneg.png");
-    initEnvironmentSide(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, "images/sky_xneg.png");
-    initEnvironmentSide(GL_TEXTURE_CUBE_MAP_POSITIVE_X, "images/sky_xpos.png");
+  // Now load up the sides of the cube
+  initEnvironmentSide(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, "images/sky_zneg.png");
+  initEnvironmentSide(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, "images/sky_zpos.png");
+  initEnvironmentSide(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, "images/sky_ypos.png");
+  initEnvironmentSide(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, "images/sky_yneg.png");
+  initEnvironmentSide(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, "images/sky_xneg.png");
+  initEnvironmentSide(GL_TEXTURE_CUBE_MAP_POSITIVE_X, "images/sky_xpos.png");
 
-    // Generate mipmap levels
-    glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+  // Generate mipmap levels
+  glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
 
-    // Set the texture parameters for the cube map
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_GENERATE_MIPMAP, GL_TRUE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    GLfloat anisotropy;
-    glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &anisotropy);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAX_ANISOTROPY_EXT, anisotropy);
+  // Set the texture parameters for the cube map
+  glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_GENERATE_MIPMAP, GL_TRUE);
+  glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+  glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  GLfloat anisotropy;
+  glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &anisotropy);
+  glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAX_ANISOTROPY_EXT, anisotropy);
 
-    // Set our cube map texture to on the shader so we can use it
-    ngl::ShaderLib *shader=ngl::ShaderLib::instance();
-    shader->use(CanProgram);
-    shader->setUniform("envMap", 0);
-    shader->use("Shadow");
-    shader->setUniform("envMap", 0);
+  // Set our cube map texture to on the shader so we can use it
+  ngl::ShaderLib *shader=ngl::ShaderLib::instance();
+  shader->use(CanProgram);
+  shader->setUniform("envMap", 0);
+  shader->use("Shadow");
+  shader->setUniform("envMap", 0);
   //  shader->use("gBuffer");
   //  shader->setUniform("envMap", 0);
 
@@ -1091,21 +1205,21 @@ void NGLScene::initEnvironment() {
  */
 void NGLScene::initEnvironmentSide(GLenum target, const char *filename)
 {
-    // Load up the image using NGL routine
-    ngl::Image img(filename);
+  // Load up the image using NGL routine
+  ngl::Image img(filename);
 
-    // Transfer image data onto the GPU using the teximage2D call
-    glTexImage2D (
-      target,           // The target (in this case, which side of the cube)
-      0,                // Level of mipmap to load
-      img.format(),     // Internal format (number of colour components)
-      img.width(),      // Width in pixels
-      img.height(),     // Height in pixels
-      0,                // Border
-      GL_RGBA,          // Format of the pixel data
-      GL_UNSIGNED_BYTE, // Data type of pixel data
-      img.getPixels()   // Pointer to image data in memory
-    );
+  // Transfer image data onto the GPU using the teximage2D call
+  glTexImage2D (
+        target,           // The target (in this case, which side of the cube)
+        0,                // Level of mipmap to load
+        img.format(),     // Internal format (number of colour components)
+        img.width(),      // Width in pixels
+        img.height(),     // Height in pixels
+        0,                // Border
+        GL_RGBA,          // Format of the pixel data
+        GL_UNSIGNED_BYTE, // Data type of pixel data
+        img.getPixels()   // Pointer to image data in memory
+        );
 }
 
 //________________________________________________________________________________________________________________________________________//
@@ -1113,38 +1227,38 @@ void NGLScene::initEnvironmentSide(GLenum target, const char *filename)
 
 void NGLScene::loadMatrices(const std::string _program)
 {
-    ngl::ShaderLib *shader=ngl::ShaderLib::instance();
- //   GLint pid = shader->getProgramID(_program);
-    shader->use(_program);
-    ngl::Mat4 MV;
-    ngl::Mat4 MVP;
-    ngl::Mat3 normalMatrix;
-    ngl::Mat4 M;
-    ngl::Mat4 P;
-    ngl::Mat4 V;
-    M=m_transform.getMatrix()*m_mouseGlobalTX;
-    MV=  M*m_cam.getViewMatrix();
-    MVP= M*m_cam.getVPMatrix();
-    V = m_cam.getViewMatrix();
-    P = m_cam.getProjectionMatrix();
-    normalMatrix=MV;
-    normalMatrix.inverse();
-    shader->setShaderParamFromMat4("MV",MV);
-    shader->setShaderParamFromMat4("MVP",MVP);
-    shader->setShaderParamFromMat3("N",normalMatrix);
-//    shader->setShaderParamFromMat3("V",V);
-//    shader->setShaderParamFromMat3("P",P);
-//    shader->setShaderParamFromMat3("M",M);
+  ngl::ShaderLib *shader=ngl::ShaderLib::instance();
+  //   GLint pid = shader->getProgramID(_program);
+  shader->use(_program);
+  ngl::Mat4 MV;
+  ngl::Mat4 MVP;
+  ngl::Mat3 normalMatrix;
+  ngl::Mat4 M;
+  ngl::Mat4 P;
+  ngl::Mat4 V;
+  M=m_transform.getMatrix()*m_mouseGlobalTX;
+  MV=  M*m_cam.getViewMatrix();
+  MVP= M*m_cam.getVPMatrix();
+  V = m_cam.getViewMatrix();
+  P = m_cam.getProjectionMatrix();
+  normalMatrix=MV;
+  normalMatrix.inverse();
+  shader->setShaderParamFromMat4("MV",MV);
+  shader->setShaderParamFromMat4("MVP",MVP);
+  shader->setShaderParamFromMat3("N",normalMatrix);
+  //    shader->setShaderParamFromMat3("V",V);
+  //    shader->setShaderParamFromMat3("P",P);
+  //    shader->setShaderParamFromMat3("M",M);
   //  shader->setShaderParam3f("LightPosition",m_lightPosition.m_x,m_lightPosition.m_y,m_lightPosition.m_z);
   //  shader->setShaderParam4f("inColour",1,1,1,1);
   //  shader->setShaderParamFromMat4("lights", P);
 
 
- //   shader->setShaderParam3f("LightPosition", m_lightPosition.m_x, m_lightPosition.m_y, m_lightPosition.m_z);
+  //   shader->setShaderParam3f("LightPosition", m_lightPosition.m_x, m_lightPosition.m_y, m_lightPosition.m_z);
 
   //  glUniform
 
-/*    ngl::Mat4 bias;
+  /*    ngl::Mat4 bias;
 
     bias.scale(0.5,0.5,0.5);
     bias.translate(0.5,0.5,0.5);
@@ -1223,50 +1337,50 @@ void NGLScene::loadMatrices(const std::string _program)
 
 void NGLScene::CreateGBuffer()
 {
-    glGenFramebuffers(1, &m_gBuffer);
-    glBindFramebuffer(GL_FRAMEBUFFER, m_gBuffer);
+  glGenFramebuffers(1, &m_gBuffer);
+  glBindFramebuffer(GL_FRAMEBUFFER, m_gBuffer);
 
 
-    // - Position color buffer
-    glGenTextures(1, &m_gPosition);
-    glBindTexture(GL_TEXTURE_2D, m_gPosition);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width(), height(), 0, GL_RGB, GL_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_gPosition, 0);
+  // - Position color buffer
+  glGenTextures(1, &m_gPosition);
+  glBindTexture(GL_TEXTURE_2D, m_gPosition);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width(), height(), 0, GL_RGB, GL_FLOAT, NULL);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_gPosition, 0);
 
-    // - Normal color buffer
-    glGenTextures(1, &m_gNormal);
-    glBindTexture(GL_TEXTURE_2D, m_gNormal);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width(), height(), 0, GL_RGB, GL_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, m_gNormal, 0);
+  // - Normal color buffer
+  glGenTextures(1, &m_gNormal);
+  glBindTexture(GL_TEXTURE_2D, m_gNormal);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width(), height(), 0, GL_RGB, GL_FLOAT, NULL);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, m_gNormal, 0);
 
-    // - Color + Specular color buffer
-    glGenTextures(1, &m_gColour);
-    glBindTexture(GL_TEXTURE_2D, m_gColour);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width(), height(), 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, m_gColour, 0);
+  // - Color + Specular color buffer
+  glGenTextures(1, &m_gColour);
+  glBindTexture(GL_TEXTURE_2D, m_gColour);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width(), height(), 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, m_gColour, 0);
 
-    // - Tell OpenGL which color attachments we'll use (of this framebuffer) for rendering
-    GLuint attachments[3] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
-    glDrawBuffers(3, attachments);
+  // - Tell OpenGL which color attachments we'll use (of this framebuffer) for rendering
+  GLuint attachments[3] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
+  glDrawBuffers(3, attachments);
 
-    // - Create and attach depth buffer (renderbuffer)
-        GLuint rboDepth;
-        glGenRenderbuffers(1, &rboDepth);
-        glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width(), height());
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboDepth);
-        // - Finally check if framebuffer is complete
-        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-            std::cout << "Framebuffer not complete!" << std::endl;
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  // - Create and attach depth buffer (renderbuffer)
+  GLuint rboDepth;
+  glGenRenderbuffers(1, &rboDepth);
+  glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width(), height());
+  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboDepth);
+  // - Finally check if framebuffer is complete
+  if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+    std::cout << "Framebuffer not complete!" << std::endl;
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+  glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 }
 
 //________________________________________________________________________________________________________________________________________//
@@ -1274,75 +1388,75 @@ void NGLScene::CreateGBuffer()
 
 void NGLScene::createSSAOBuffers()
 {
-// Also create framebuffer to hold SSAO processing stage
+  // Also create framebuffer to hold SSAO processing stage
 
-    glGenFramebuffers(1, &m_ssaoFBO);  glGenFramebuffers(1, &m_ssaoBlurFBO);
-    glBindFramebuffer(GL_FRAMEBUFFER, m_ssaoFBO);
+  glGenFramebuffers(1, &m_ssaoFBO);  glGenFramebuffers(1, &m_ssaoBlurFBO);
+  glBindFramebuffer(GL_FRAMEBUFFER, m_ssaoFBO);
 
-    // - SSAO color buffer
-    glGenTextures(1, &m_ssaoColorBuffer);
-    glBindTexture(GL_TEXTURE_2D, m_ssaoColorBuffer);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, width(), height(), 0, GL_RGB, GL_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_ssaoColorBuffer, 0);
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        std::cout << "SSAO Framebuffer not complete!" << std::endl;
-    // - and blur stage
-    glBindFramebuffer(GL_FRAMEBUFFER, m_ssaoBlurFBO);
-    glGenTextures(1, &m_ssaoColorBufferBlur);
-    glBindTexture(GL_TEXTURE_2D, m_ssaoColorBufferBlur);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, width(), height(), 0, GL_RGB, GL_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_ssaoColorBufferBlur, 0);
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        std::cout << "SSAO Blur Framebuffer not complete!" << std::endl;
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  // - SSAO color buffer
+  glGenTextures(1, &m_ssaoColorBuffer);
+  glBindTexture(GL_TEXTURE_2D, m_ssaoColorBuffer);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, width(), height(), 0, GL_RGB, GL_FLOAT, NULL);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_ssaoColorBuffer, 0);
+  if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+    std::cout << "SSAO Framebuffer not complete!" << std::endl;
+  // - and blur stage
+  glBindFramebuffer(GL_FRAMEBUFFER, m_ssaoBlurFBO);
+  glGenTextures(1, &m_ssaoColorBufferBlur);
+  glBindTexture(GL_TEXTURE_2D, m_ssaoColorBufferBlur);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, width(), height(), 0, GL_RGB, GL_FLOAT, NULL);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_ssaoColorBufferBlur, 0);
+  if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+    std::cout << "SSAO Blur Framebuffer not complete!" << std::endl;
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 //________________________________________________________________________________________________________________________________________//
 
 GLfloat NGLScene::lerp(GLfloat a, GLfloat b, GLfloat f)
 {
-    return a + f * (b - a);
+  return a + f * (b - a);
 }
 
 //________________________________________________________________________________________________________________________________________//
 
 void NGLScene::createSSAOKernelNoise()
 {
-// Sample kernel
-    std::uniform_real_distribution<GLfloat> randomFloats(0.0, 1.0); // generates random floats between 0.0 and 1.0
-    std::default_random_engine generator;
+  // Sample kernel
+  std::uniform_real_distribution<GLfloat> randomFloats(0.0, 1.0); // generates random floats between 0.0 and 1.0
+  std::default_random_engine generator;
 
-    for (GLuint i = 0; i < 64; ++i)
+  for (GLuint i = 0; i < 64; ++i)
+  {
+    glm::vec3 sample(randomFloats(generator) * 2.0 - 1.0, randomFloats(generator) * 2.0 - 1.0, randomFloats(generator));
+    sample = glm::normalize(sample);
+    sample *= randomFloats(generator);
+    GLfloat scale = GLfloat(i) / 64.0;
+
+    // Scale samples s.t. they're more aligned to center of kernel
+    scale = lerp(0.1f, 1.0f, scale * scale);
+    sample *= scale;
+    m_ssaoKernel.push_back(sample);
+
+    // Noise texture
+    std::vector<glm::vec3> ssaoNoise;
+    for (GLuint i = 0; i < 16; i++)
     {
-        glm::vec3 sample(randomFloats(generator) * 2.0 - 1.0, randomFloats(generator) * 2.0 - 1.0, randomFloats(generator));
-        sample = glm::normalize(sample);
-        sample *= randomFloats(generator);
-        GLfloat scale = GLfloat(i) / 64.0;
-
-        // Scale samples s.t. they're more aligned to center of kernel
-        scale = lerp(0.1f, 1.0f, scale * scale);
-        sample *= scale;
-        m_ssaoKernel.push_back(sample);
-
-        // Noise texture
-           std::vector<glm::vec3> ssaoNoise;
-           for (GLuint i = 0; i < 16; i++)
-           {
-               glm::vec3 noise(randomFloats(generator) * 2.0 - 1.0, randomFloats(generator) * 2.0 - 1.0, 0.0f); // rotate around z-axis (in tangent space)
-               ssaoNoise.push_back(noise);
-           }
-           glGenTextures(1, &m_noiseTexture);
-           glBindTexture(GL_TEXTURE_2D, m_noiseTexture);
-           glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, 4, 4, 0, GL_RGB, GL_FLOAT, &ssaoNoise[0]);
-           glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-           glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-           glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-           glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+      glm::vec3 noise(randomFloats(generator) * 2.0 - 1.0, randomFloats(generator) * 2.0 - 1.0, 0.0f); // rotate around z-axis (in tangent space)
+      ssaoNoise.push_back(noise);
     }
+    glGenTextures(1, &m_noiseTexture);
+    glBindTexture(GL_TEXTURE_2D, m_noiseTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, 4, 4, 0, GL_RGB, GL_FLOAT, &ssaoNoise[0]);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  }
 }
 
 //________________________________________________________________________________________________________________________________________//
@@ -1352,27 +1466,27 @@ void NGLScene::createSSAOKernelNoise()
 
 void NGLScene::RenderQuad()
 {
-    if (m_quadVAO == 0)
-    {
-        GLfloat quadVertices[] = {
-            // Positions        // Texture Coords
-            -width(),  height(), 0.0f, 0.0f, 1.0f,
-            -width(), -height(), 0.0f, 0.0f, 0.0f,
-             width(),  height(), 0.0f, 1.0f, 1.0f,
-             width(), -height(), 0.0f, 1.0f, 0.0f,
-        };
-        // Setup plane VAO
-        glGenVertexArrays(1, &m_quadVAO);
-        glGenBuffers(1, &m_quadVBO);
-        glBindVertexArray(m_quadVAO);
-        glBindBuffer(GL_ARRAY_BUFFER, m_quadVBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)0);
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
-    }
+  if (m_quadVAO == 0)
+  {
+    GLfloat quadVertices[] = {
+      // Positions        // Texture Coords
+      -1,  1, 0.0f, 0.0f, 1.0f,
+      -1, -1, 0.0f, 0.0f, 0.0f,
+      1,  1, 0.0f, 1.0f, 1.0f,
+      1, -1, 0.0f, 1.0f, 0.0f,
+    };
+    // Setup plane VAO
+    glGenVertexArrays(1, &m_quadVAO);
+    glGenBuffers(1, &m_quadVBO);
     glBindVertexArray(m_quadVAO);
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, m_quadVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
+  }
+  glBindVertexArray(m_quadVAO);
+  glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+  glBindVertexArray(0);
 }

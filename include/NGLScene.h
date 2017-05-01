@@ -227,7 +227,10 @@ private:
     GLuint m_quadVAO;
     GLuint m_quadVBO;
 
-    unsigned int m_pingpongFBO, m_pingpongColourBuffers;
+    unsigned int m_pingpongFBO[2], m_pingpongColourBuffers[2];
+
+    ngl::Vec3 m_lightPos = ngl::Vec3(2.0, 4.0, -2.0);
+    ngl::Vec3 m_lightColor = ngl::Vec3(0.2, 0.2, 0.7);
 
 
 };

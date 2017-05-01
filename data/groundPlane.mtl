@@ -1,0 +1,16 @@
+newmtl VRayMtl1SG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+Ni 0.00
+newmtl can:blinn1SG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd outUV4.tif
+bump bump map15.tif -bm 0.263158
+Ni 1.00
+Ks 0.85 0.85 0.85
+Ns 0.06
