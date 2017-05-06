@@ -25,7 +25,12 @@ https://www.shadertoy.com/view/Msf3WH for simplex noise code
 http://blog.selfshadow.com/publications/s2013-shading-course/karis/s2013_pbs_epic_notes_v2.pdf for microfacet
 
 fix light on ground plane and add normal map/spec map.
+
+
+
+
 fix depth of field
 =======
 # Can_Project2
 >>>>>>> 3083ad235af941d064f230be9af65cb566be98be
+# Can_Project4
