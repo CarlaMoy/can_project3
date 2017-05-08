@@ -107,7 +107,7 @@ void NGLScene::initializeGL()
   // Initialise texture maps here
   initTexture(1, m_glossMapTex, "images/gloss.png");
   initTexture(2, m_labelTex, "images/colourMapCan.tif");
-  initTexture(3, m_bumpTex, "images/bumpMapCan.png");
+  initTexture(3, m_bumpTex, "images/NormalMap.jpg");
 
   initTexture(4, m_woodTex, "images/woodDif.jpg");
   initTexture(5, m_woodSpec, "images/woodSpec.jpg");
@@ -116,97 +116,6 @@ void NGLScene::initializeGL()
 
   //________________________________________________________________________________________________________________________________________//
 
-  // we are creating a shader called gBuffer
-  shader->createShaderProgram("gBuffer");
-  // now we are going to create empty shaders for Frag and Vert
-  shader->attachShader("gBufferVertex",ngl::ShaderType::VERTEX);
-  shader->attachShader("gBufferFragment",ngl::ShaderType::FRAGMENT);
-  // attach the source
-  shader->loadShaderSource("gBufferVertex","shaders/gBufferVert.glsl");
-  shader->loadShaderSource("gBufferFragment","shaders/gBufferFrag.glsl");
-  // compile the shaders
-  shader->compileShader("gBufferVertex");
-  shader->compileShader("gBufferFragment");
-  // add them to the program
-  shader->attachShaderToProgram("gBuffer","gBufferVertex");
-  shader->attachShaderToProgram("gBuffer","gBufferFragment");
-
-  // now we have associated this data we can link the shader
-  shader->linkProgramObject("gBuffer");
-
-  shader->use("gBuffer");
-  GLuint gBufferID = shader->getProgramID("gBuffer");
-  glUniform1i(glGetUniformLocation(gBufferID, "gPosition"), 3);
-  glUniform1i(glGetUniformLocation(gBufferID, "gNormal"), 4);
-  glUniform1i(glGetUniformLocation(gBufferID, "gColour"), 5);
-  shader->setUniform("labelMap", 2);
-
-  //________________________________________________________________________________________________________________________________________//
-
-  // we are creating a shader called SSAO
-  shader->createShaderProgram("SSAO");
-  // now we are going to create empty shaders for Frag and Vert
-  shader->attachShader("SSAOVertex",ngl::ShaderType::VERTEX);
-  shader->attachShader("SSAOFragment",ngl::ShaderType::FRAGMENT);
-  // attach the source
-  shader->loadShaderSource("SSAOVertex","shaders/SSAOVert.glsl");
-  shader->loadShaderSource("SSAOFragment","shaders/SSAOFrag.glsl");
-  // compile the shaders
-  shader->compileShader("SSAOVertex");
-  shader->compileShader("SSAOFragment");
-  // add them to the program
-  shader->attachShaderToProgram("SSAO","SSAOVertex");
-  shader->attachShaderToProgram("SSAO","SSAOFragment");
-
-  // now we have associated this data we can link the shader
-  shader->linkProgramObject("SSAO");
-  shader->use("SSAO");
-  m_SSAOID = shader->getProgramID("SSAO");
-  glUniform1i(glGetUniformLocation(m_SSAOID, "gPosition"), 3);
-  glUniform1i(glGetUniformLocation(m_SSAOID, "gNormal"), 4);
-  glUniform1i(glGetUniformLocation(m_SSAOID, "texNoise"), 7);
-
-  //________________________________________________________________________________________________________________________________________//
-
-  /* // we are creating a shader called Lights
-  shader->createShaderProgram("Lights");
-  // now we are going to create empty shaders for Frag and Vert
-  shader->attachShader("LightsVertex",ngl::ShaderType::VERTEX);
-  shader->attachShader("LightsFragment",ngl::ShaderType::FRAGMENT);
-  // attach the source
-  shader->loadShaderSource("LightsVertex","shaders/LightingVert.glsl");
-  shader->loadShaderSource("LightsFragment","shaders/LightingFrag.glsl");
-  // compile the shaders
-  shader->compileShader("LightsVertex");
-  shader->compileShader("LightsFragment");
-  // add them to the program
-  shader->attachShaderToProgram("Lights","LightsVertex");
-  shader->attachShaderToProgram("Lights","LightsFragment");
-
-  // now we have associated this data we can link the shader
-  shader->linkProgramObject("Lights");*/
-
-  //________________________________________________________________________________________________________________________________________//
-
-
-
-  // we are creating a shader called SSAOBlur
-  shader->createShaderProgram("SSAOBlur");
-  // now we are going to create empty shaders for Frag and Vert
-  shader->attachShader("SSAOBlurVertex",ngl::ShaderType::VERTEX);
-  shader->attachShader("SSAOBlurFragment",ngl::ShaderType::FRAGMENT);
-  // attach the source
-  shader->loadShaderSource("SSAOBlurVertex","shaders/SSAOBlurVert.glsl");
-  shader->loadShaderSource("SSAOBlurFragment","shaders/SSAOBlurFrag.glsl");
-  // compile the shaders
-  shader->compileShader("SSAOBlurVertex");
-  shader->compileShader("SSAOBlurFragment");
-  // add them to the program
-  shader->attachShaderToProgram("SSAOBlur","SSAOBlurVertex");
-  shader->attachShaderToProgram("SSAOBlur","SSAOBlurFragment");
-
-  // now we have associated this data we can link the shader
-  shader->linkProgramObject("SSAOBlur");
 
   //________________________________________________________________________________________________________________________________________//
 
@@ -329,7 +238,7 @@ void NGLScene::initializeGL()
 
   shader->setUniform("glossMap", 1);
   shader->setUniform("labelMap", 2);
-  shader->setUniform("bumpMap", 3);
+  shader->setUniform("normalMap", 3);
 
   shader->setShaderParam3f("Light[0].La", 0.5, 0.5, 0.5);
   shader->setShaderParam3f("Light[0].Ld", 1.0, 1.0, 1.0);
@@ -367,11 +276,11 @@ void NGLScene::initializeGL()
   createShadowFBO();
 
   //create SSAO FBOs and Kernel noise for SSAO
-  CreateGBuffer();
+ // CreateGBuffer();
 
-  createSSAOBuffers();
+  //createSSAOBuffers();
 
-  createSSAOKernelNoise();
+ // createSSAOKernelNoise();
 
   createBlurFBO();
 
@@ -433,14 +342,14 @@ void NGLScene::loadMatricesToShadowShader()
   shader->setShaderParam3f("Light[1].La", 0.5, 0.5, 0.5);
   shader->setShaderParam3f("Light[1].Ld", 0.1, 1.0, 1.0);
   shader->setShaderParam3f("Light[1].Ls", 1.0, 1.0, 1.0);
-  shader->setShaderParam3f("Light[1].Intensity", 0.6, 0.6, 1.0);
-  shader->setShaderParam1f("Light[1].Linear", 0.7);
-  shader->setShaderParam1f("Light[1].Quadratic", 1.8);
+  shader->setShaderParam3f("Light[1].Intensity", 1.0, 1.0, 4.0);
+  shader->setShaderParam1f("Light[1].Linear", 0.35);
+  shader->setShaderParam1f("Light[1].Quadratic", 1.44);
   shader->setShaderParam4f("Light[2].Position",4.0, 3.0, -1.0, 0.0);
   shader->setShaderParam3f("Light[2].La", 0.5, 0.5, 0.5);
   shader->setShaderParam3f("Light[2].Ld", 1.0, 0.1, 1.0);
   shader->setShaderParam3f("Light[2].Ls", 1.0, 1.0, 1.0);
-  shader->setShaderParam3f("Light[2].Intensity", 0.8, 0.6, 0.6);
+  shader->setShaderParam3f("Light[2].Intensity", 5.0, 0.6, 0.6);
   shader->setShaderParam1f("Light[2].Linear", 0.7);
   shader->setShaderParam1f("Light[2].Quadratic", 1.8);
 
@@ -520,121 +429,13 @@ void NGLScene::drawScene(std::function<void()> _shaderFunc )
 
 void NGLScene::paintGL()
 {
-  ngl::VAOPrimitives *prim=ngl::VAOPrimitives::instance();
   ngl::ShaderLib *shader=ngl::ShaderLib::instance();
-
-
-
-
-  /*// 1. Geometry Pass: render scene's geometry/color data into gbuffer
-    glBindFramebuffer(GL_FRAMEBUFFER, m_gBuffer);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-   // loadMatrices("gBuffer");
-    shader->use("gBuffer");
-    shader->setShaderParamFromMat4("projection", m_cam.getProjectionMatrix());
-    shader->setShaderParamFromMat4("model", ngl::Mat4(0.0));
-    shader->setShaderParamFromMat4("view", m_cam.getViewMatrix());
-    m_mesh->draw();
-    prim->draw("plane");
-
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-
-    // 2. Create SSAO texture
-    glBindFramebuffer(GL_FRAMEBUFFER, m_ssaoFBO);
-        glClear(GL_COLOR_BUFFER_BIT);
-        shader->use("SSAO");
-        for (unsigned int i = 0; i < 64; ++i)
-        {
-            const std::string sampleList = "samples[" + std::to_string(i) + "]";
-            shader->setShaderParam3f(sampleList, m_ssaoKernel[i]);
-        }
-
-        shader->setShaderParamFromMat4("projection", m_cam.getProjectionMatrix());
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, m_gPosition);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, m_gNormal);
-        glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, m_noiseTexture);
-        // Send kernel + rotation
-        for (GLuint i = 0; i < 64; ++i)
-
-        RenderQuad();
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-    // 3. Blur SSAO texture to remove noise
-    glBindFramebuffer(GL_FRAMEBUFFER, m_ssaoBlurFBO);
-        glClear(GL_COLOR_BUFFER_BIT);
-        shader->use("SSAOBlur");
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, m_ssaoColorBuffer);
-        RenderQuad();
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    shader->use("Light");
-    // send light relevant uniforms
-    ngl::Vec4 lightPosView = m_cam.getViewMatrix() * ngl::Vec4(m_lightPos, 1.0);
-    shader->setShaderParam4f("light.Position", lightPosView);
-    shader->setShaderParam3f("light.Color", m_lightColor);
-    // Update attenuation parameters
-    const float constant  = 1.0; // note that we don't send this to the shader, we assume it is always 1.0 (in our case)
-    const float linear    = 0.09;
-    const float quadratic = 0.032;
-    shader->setShaderParam1f("light.Linear", linear);
-    shader->setShaderParam1f("light.Quadratic", quadratic);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, m_gPosition);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, m_gNormal);
-    glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, m_gColour);
-    glActiveTexture(GL_TEXTURE3); // add extra SSAO texture to lighting pass
-    glBindTexture(GL_TEXTURE_2D, m_ssaoColorBufferBlur);
-    RenderQuad();*/
-
-  /*// 4. Lighting Pass: traditional deferred Blinn-Phong lighting now with added screen-space ambient occlusion
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    shader->use(CanProgram);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, m_gPosition);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, m_gNormal);
-    glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, m_gColour);
-    glActiveTexture(GL_TEXTURE3); // Add extra SSAO texture to lighting pass
-    glBindTexture(GL_TEXTURE_2D, m_ssaoColorBufferBlur);
-    // Also send light relevant uniforms
-  //  glm::vec3 lightPosView = glm::vec3(camera.GetViewMatrix() * glm::vec4(lightPos, 1.0));
- //   glUniform3fv(glGetUniformLocation(m_CanID, "light.Position"), 1, &lightPosView[0]);
- //   glUniform3fv(glGetUniformLocation(m_CanID, "light.Color"), 1, &lightColor[0]);
-    // Update attenuation parameters
-  //  const GLfloat constant = 1.0; // Note that we don't send this to the shader, we assume it is always 1.0 (in our case)
- //   const GLfloat linear = 0.09;
- //   const GLfloat quadratic = 0.032;
- //   glUniform1f(glGetUniformLocation(shaderLightingPass.Program, "light.Linear"), linear);
- //   glUniform1f(glGetUniformLocation(shaderLightingPass.Program, "light.Quadratic"), quadratic);
- //   glUniform1i(glGetUniformLocation(shaderLightingPass.Program, "draw_mode"), draw_mode);
-    m_transform.reset();
-    m_transform.setPosition(0.0f,0.0f,0.0f);
-    m_transform.setScale(0.4,0.4,0.4);
-    loadMatrices(CanProgram);
-    shader->use(CanProgram);
-    shader->setShaderParam4f("Light[0].Position",m_lightPosition.m_x,m_lightPosition.m_y,m_lightPosition.m_z, 1.0);
-  //  m_mesh->draw();
-    RenderQuad();*/
-
-
-
-
 
 
   //________________________________________________________________________________________________________________________________________//
 
   //----------------------------------------------------------------------------------------------------------------------
-  // Pass 1 render our Depth texture to the FBO
+  // Pass 1 render the Depth texture to the FBO
   //----------------------------------------------------------------------------------------------------------------------
   // enable culling
   glEnable(GL_CULL_FACE);
@@ -643,84 +444,32 @@ void NGLScene::paintGL()
   glBindFramebuffer(GL_FRAMEBUFFER,m_ShadowfboID);
   // bind the texture object to 0 (off )
   glBindTexture(GL_TEXTURE_2D,0);
-  // we need to render to the same size as the texture to avoid
+  // render to the same size as the texture to avoid
   // distortions
   glViewport(0,0,TEXTURE_WIDTH,TEXTURE_HEIGHT);
 
   // Clear previous frame values
   glClear( GL_DEPTH_BUFFER_BIT);
-  // as we are only rendering depth turn off the colour / alpha
+  // only rendering depth, turn off the colour / alpha
   glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 
-  // render only the back faces so we don't get too much self shadowing
+  // render only the back faces so less self shadowing
   glCullFace(GL_FRONT);
-  // draw the scene from the POV of the light using the function we need
+  // draw the scene from the POV of the light
   drawScene(std::bind(&NGLScene::loadToLightPOVShader,this));
 
   //________________________________________________________________________________________________________________________________________//
 
-  // Bind the FBO to specify an alternative render target
-  /*  glBindFramebuffer(GL_FRAMEBUFFER, m_blurFBO);
-
-  // Set up the viewport
-  glViewport(0,0,width(),height());
-
-  // Clear the screen (fill with our glClearColor)
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-  m_transform.reset();
-  m_transform.setPosition(0.0f,0.0f,0.0f);
-  m_transform.setScale(0.4,0.4,0.4);
-  loadMatrices(CanProgram);
-  shader->use(CanProgram);
-  shader->setShaderParam4f("Light[0].Position",m_lightPosition.m_x,m_lightPosition.m_y,m_lightPosition.m_z, 1.0);
-  m_mesh->draw();*/
-
-
-  //________________________________________________________________________________________________________________________________________//
-
-  // Unbind our FBO
-  /*  glBindFramebuffer(GL_FRAMEBUFFER,0);
-
-  // Find the depth of field shader
-  glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  glViewport(0,0,width(),height());
-
-  // Now bind our rendered image which should be in the frame buffer for the next render pass
-  glActiveTexture(GL_TEXTURE1);
-  glBindTexture(GL_TEXTURE_2D, m_blurTexFBO);
-  glActiveTexture(GL_TEXTURE2);
-  glBindTexture(GL_TEXTURE_2D, m_blurDepthFBO);
-
-  shader->use("DOF");
-  GLuint pid = shader->getProgramID("DOF");
-
-  glUniform1i(glGetUniformLocation(pid, "colourTex"), 1);
-  glUniform1i(glGetUniformLocation(pid, "depthTex"), 2);
-  glUniform1f(glGetUniformLocation(pid, "focalDepth"), 1.0);
-  glUniform1f(glGetUniformLocation(pid, "blurRadius"), 0.01);
-  glUniform2f(glGetUniformLocation(pid, "windowSize"), width(), height());
-
-  ngl::Mat4 MVP = m_cam.getVPMatrix();
-
-  shader->setShaderParamFromMat4("MVP", MVP);
-
-  prim->draw("plane");*/
-
-
-
-
   //----------------------------------------------------------------------------------------------------------------------
-  // Pass two use the texture
-  // now we have created the texture for shadows render the scene properly
+  // Pass two : use the shadow map texture
+  // Render the scene with the shadow map texture on the ground plane
   //----------------------------------------------------------------------------------------------------------------------
-  // go back to our normal framebuffer
+  // store framebuffer for main scene to a texture
   glBindFramebuffer(GL_FRAMEBUFFER, m_blurFBO);
 
-  // glBindFramebuffer(GL_FRAMEBUFFER, m_blurFBO);
   // set the viewport to the screen dimensions
   glViewport(0, 0, width() * devicePixelRatio(), height() * devicePixelRatio());
-  // enable colour rendering again (as we turned it off earlier)
+  // enable colour rendering again
   glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
   // clear the screen
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -730,49 +479,11 @@ void NGLScene::paintGL()
   glBindTexture(GL_TEXTURE_2D,m_ShadowtextureID);
 
 
-  // we need to generate the mip maps each time we bind
-  // glGenerateMipmap(GL_TEXTURE_2D);
-
-  // now only cull back faces
+  // only cull back faces
   glDisable(GL_CULL_FACE);
   glCullFace(GL_BACK);
-  // render our scene with the shadow shader
+  // render scene with the shadow shader
   drawScene(std::bind(&NGLScene::loadMatricesToShadowShader,this));
-
-
-
-  //----------------------------------------------------------------------------------------------------------------------
-  // this draws the debug texture on the quad
-  //----------------------------------------------------------------------------------------------------------------------
-
-  // glBindTexture(GL_TEXTURE_2D,m_textureID);
-  // debugTexture(-0.6f,-1,0.6f,1);
-
-
-
-
-  //----------------------------------------------------------------------------------------------------------------------
-  // now draw the text
-  //----------------------------------------------------------------------------------------------------------------------
-
-  glDisable(GL_CULL_FACE);
-
-  QString text=QString("Light Position [%1,%2,%3]")
-      .arg(m_lightPosition.m_x)
-      .arg(m_lightPosition.m_y)
-      .arg(m_lightPosition.m_z);
-
-  m_text->setColour(1,1,1);
-  m_text->renderText(250,20,text);
-  text.sprintf("Y Position %0.2f",m_lightYPos);
-  m_text->renderText(250,40,text);
-  text.sprintf("X offset %0.2f",m_lightXoffset);
-  m_text->renderText(250,60,text);
-  text.sprintf("Z offset %0.2f",m_lightZoffset);
-  m_text->renderText(250,80,text);
-
-
-  //----------------------------------------------------------------------------------------------------------------------
 
   //Draw the can
 
@@ -787,62 +498,41 @@ void NGLScene::paintGL()
 
   //________________________________________________________________________________________________________________________________________//
 
+  //----------------------------------------------------------------------------------------------------------------------
+  // Pass three : Ping Pong Framebuffers for blur effect
+  // Render the previous scene's stored texture to a screen aligned quad and blur
+  //----------------------------------------------------------------------------------------------------------------------
 
-  // Unbind our FBO
-/*    glBindFramebuffer(GL_FRAMEBUFFER,0);
-
-  // Find the depth of field shader
-  glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  glViewport(0,0,width(),height());
-
-  // Now bind our rendered image which should be in the frame buffer for the next render pass
-  glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, m_blurTexFBO);
-
-
-  glActiveTexture(GL_TEXTURE1);
-  glBindTexture(GL_TEXTURE_2D, m_blurDepthFBO);
-
-  shader->use("DOF");
-  GLuint pid = shader->getProgramID("DOF");
-
-  glUniform1i(glGetUniformLocation(pid, "colourTex"), 0);
-  glUniform1i(glGetUniformLocation(pid, "depthTex"), 1);
-  glUniform1f(glGetUniformLocation(pid, "focalDepth"), 1.0);
-  glUniform1f(glGetUniformLocation(pid, "blurRadius"), 0.01);
-  glUniform2f(glGetUniformLocation(pid, "windowSize"), width(), height());
-
-  ngl::Mat4 MVP = m_cam.getVPMatrix();
-
-  shader->setShaderParamFromMat4("MVP", MVP);
-
-
-  RenderQuad();*/
-
-
+ //Code taken from https://learnopengl.com/#!Advanced-Lighting/Bloom
   bool horizontal = true, first_iteration = true;
-  unsigned int amount = 10;
+  unsigned int amount = 30;
   shader->use("DOF");
   for (unsigned int i = 0; i < amount; i++)
   {
     glBindFramebuffer(GL_FRAMEBUFFER, m_pingpongFBO[horizontal]);
     shader->setRegisteredUniform1i("horizontal", horizontal);
     glBindTexture(GL_TEXTURE_2D, first_iteration ? m_blurTexFBO : m_pingpongColourBuffers[!horizontal]);  // bind texture of other framebuffer (or scene if first iteration)
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, m_blurDepthFBO);
     RenderQuad();
     horizontal = !horizontal;
     if (first_iteration)
       first_iteration = false;
   }
+  //End of code taken from https://learnopengl.com/#!Advanced-Lighting/Bloom
+
+  //----------------------------------------------------------------------------------------------------------------------
+  // Pass four : Render to default Framebuffer
+  //----------------------------------------------------------------------------------------------------------------------
+
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   shader->use("DOFFinal");
+
   glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, m_pingpongFBO[0]);
-  glActiveTexture(GL_TEXTURE1);
-  glBindTexture(GL_TEXTURE_2D, m_pingpongColourBuffers[!horizontal]);
-  // glUniform1i(glGetUniformLocation(shaderBloomFinal.Program, "bloom"), bloom);
-  //glUniform1f(glGetUniformLocation(shaderBloomFinal.Program, "exposure"), exposure);
+  glBindTexture(GL_TEXTURE_2D, m_pingpongColourBuffers[0]);
+
   RenderQuad();
 }
 
@@ -854,17 +544,13 @@ void NGLScene::paintGL()
 void NGLScene::createShadowFBO()
 {
 
-  // Try to use a texture depth component
+
   glGenTextures(1, &m_ShadowtextureID);
   glBindTexture(GL_TEXTURE_2D, m_ShadowtextureID);
-  //glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
 
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-  //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
-  //glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE, GL_LUMINANCE);
-  //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
 
   glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
   glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
@@ -873,18 +559,18 @@ void NGLScene::createShadowFBO()
 
   glBindTexture(GL_TEXTURE_2D, 0);
 
-  // create our FBO
+  // create FBO
   glGenFramebuffers(1, &m_ShadowfboID);
   glBindFramebuffer(GL_FRAMEBUFFER, m_ShadowfboID);
-  // disable the colour and read buffers as we only want depth
+  // disable the colour and read buffers as only depth needed
   glDrawBuffer(GL_NONE);
   glReadBuffer(GL_NONE);
 
-  // attach our texture to the FBO
+  // attach texture to the FBO
 
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,GL_TEXTURE_2D, m_ShadowtextureID, 0);
 
-  // switch back to window-system-provided framebuffer
+  // switch back to default framebuffer
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
@@ -893,7 +579,8 @@ void NGLScene::createShadowFBO()
 
 void NGLScene::createBlurFBO()
 {
-      // First delete the FBO if it has been created previously
+    //Code taken from myBU: Principles of Rendering, Unit Materials, Real Time Rendering, W6_DepthOfField
+    // First delete the FBO if it has been created previously
     glBindFramebuffer(GL_FRAMEBUFFER, m_blurFBO);
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER)==GL_FRAMEBUFFER_COMPLETE) {
         glDeleteTextures(1, &m_blurTexFBO);
@@ -921,7 +608,7 @@ void NGLScene::createBlurFBO()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    // The depth buffer is rendered to a texture buffer too
+    // The depth buffer is rendered to a texture buffer
     glGenTextures(1, &m_blurDepthFBO);
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, m_blurDepthFBO);
@@ -950,42 +637,8 @@ void NGLScene::createBlurFBO()
     GLenum drawBufs[] = {GL_COLOR_ATTACHMENT0};
     glDrawBuffers(1, drawBufs);
 
-  // Check it is ready to rock and roll
-  //   CheckFrameBuffer();
-
-  // Unbind the framebuffer to revert to default render pipeline
-/*  glGenFramebuffers(1, &m_blurFBO);
-  glBindFramebuffer(GL_FRAMEBUFFER, m_blurFBO);
-
-  glGenTextures(1, m_blurTexFBO);
-  glBindTexture(GL_TEXTURE_2D, m_blurTexFBO);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width(), height(), 0, GL_RGB, GL_FLOAT, NULL);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);  // We clamp to the edge as the blur filter would otherwise sample repeated texture values!
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  // attach texture to framebuffer
-  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_blurTexFBO, 0);
-
-  GLuint m_blurDepthFBO;
-  glGenRenderbuffers(1, &m_blurDepthFBO);
-  glBindRenderbuffer(GL_RENDERBUFFER, m_blurDepthFBO);
-  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width(), height());
-  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_blurDepthFBO);
-  // - Tell OpenGL which color attachments we'll use (of this framebuffer) for rendering
-  GLuint attachments[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
-  glDrawBuffers(2, attachments);
-  // - Finally check if framebuffer is complete
-  if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-    std::cout << "Framebuffer not complete!" << std::endl;
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);*/
-
-
-
-
+  //Code taken from https://learnopengl.com/#!Advanced-Lighting/Bloom
   // ping-pong-framebuffer for blurring
-  //  unsigned int m_pingpongFBO[2];
-  //  unsigned int m_pingpongColourbuffers[2];
   glGenFramebuffers(2, m_pingpongFBO);
   glGenTextures(2, m_pingpongColourBuffers);
   for (unsigned int i = 0; i < 2; i++)
@@ -995,13 +648,14 @@ void NGLScene::createBlurFBO()
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width(), height(), 0, GL_RGB, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // we clamp to the edge as the blur filter would otherwise sample repeated texture values!
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // clamp to the edge as the blur filter would otherwise sample repeated texture values
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_pingpongColourBuffers[i], 0);
     // also check if framebuffers are complete (no need for depth buffer)
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
       std::cout << "Framebuffer not complete!" << std::endl;
   }
+  //End of code taken from https://learnopengl.com/#!Advanced-Lighting/Bloom
 }
 
 //________________________________________________________________________________________________________________________________________//
@@ -1034,8 +688,7 @@ void NGLScene::keyPressEvent(QKeyEvent *_event)
 
   default : break;
   }
-  // finally update the GLWindow and re-draw
-  //if (isExposed())
+
   update();
 }
 
@@ -1047,7 +700,7 @@ void NGLScene::updateLight()
   // change the light angle
   m_lightAngle+=0.02;
   m_lightPosition.set(m_lightXoffset*cos(m_lightAngle),m_lightYPos,m_lightXoffset*sin(m_lightAngle));
-  // now set this value and load to the shader
+  // set this value and load to the shader
   m_lightCamera.set(m_lightPosition,ngl::Vec3(0,0,0),ngl::Vec3(0,1,0));
 }
 
@@ -1110,13 +763,13 @@ void NGLScene::debugTexture(float _t, float _b, float _l, float _r)
 //________________________________________________________________________________________________________________________________________//
 
 void NGLScene::initTexture(const GLuint& texUnit, GLuint &texId, const char *filename) {
-  // Set our active texture unit
+  // Set active texture unit
   glActiveTexture(GL_TEXTURE0 + texUnit);
 
   // Load up the image using NGL routine
   ngl::Image img(filename);
 
-  // Create storage for our new texture
+  // Create storage for the new texture
   glGenTextures(1, &texId);
 
   // Bind the current texture
@@ -1151,10 +804,10 @@ void NGLScene::initEnvironment() {
   // Enable seamless cube mapping
   glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
-  // Placing our environment map texture in texture unit 0
+  // Placing environment map texture in texture unit 0
   glActiveTexture (GL_TEXTURE0);
 
-  // Generate storage and a reference for our environment map texture
+  // Generate storage and a reference for environment map texture
   glGenTextures (1, &m_envTex);
 
   // Bind this texture to the active texture unit
@@ -1181,14 +834,10 @@ void NGLScene::initEnvironment() {
   glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &anisotropy);
   glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAX_ANISOTROPY_EXT, anisotropy);
 
-  // Set our cube map texture to on the shader so we can use it
+  // Set cube map texture to on the shader so we can use it
   ngl::ShaderLib *shader=ngl::ShaderLib::instance();
   shader->use(CanProgram);
   shader->setUniform("envMap", 0);
-  shader->use("Shadow");
-  shader->setUniform("envMap", 0);
-  //  shader->use("gBuffer");
-  //  shader->setUniform("envMap", 0);
 
 }
 
@@ -1228,7 +877,7 @@ void NGLScene::initEnvironmentSide(GLenum target, const char *filename)
 void NGLScene::loadMatrices(const std::string _program)
 {
   ngl::ShaderLib *shader=ngl::ShaderLib::instance();
-  //   GLint pid = shader->getProgramID(_program);
+
   shader->use(_program);
   ngl::Mat4 MV;
   ngl::Mat4 MVP;
@@ -1246,96 +895,49 @@ void NGLScene::loadMatrices(const std::string _program)
   shader->setShaderParamFromMat4("MV",MV);
   shader->setShaderParamFromMat4("MVP",MVP);
   shader->setShaderParamFromMat3("N",normalMatrix);
-  //    shader->setShaderParamFromMat3("V",V);
-  //    shader->setShaderParamFromMat3("P",P);
-  //    shader->setShaderParamFromMat3("M",M);
-  //  shader->setShaderParam3f("LightPosition",m_lightPosition.m_x,m_lightPosition.m_y,m_lightPosition.m_z);
-  //  shader->setShaderParam4f("inColour",1,1,1,1);
-  //  shader->setShaderParamFromMat4("lights", P);
+  shader->setUniform("viewPos", m_cam.getEye().toVec3());
+ }
 
+//________________________________________________________________________________________________________________________________________//
+//________________________________________________________________________________________________________________________________________//
 
-  //   shader->setShaderParam3f("LightPosition", m_lightPosition.m_x, m_lightPosition.m_y, m_lightPosition.m_z);
+// RenderQuad() Renders a 1x1 quad in NDC, best used for framebuffer colour targets
+// and post-processing effects.
 
-  //  glUniform
-
-  /*    ngl::Mat4 bias;
-
-    bias.scale(0.5,0.5,0.5);
-    bias.translate(0.5,0.5,0.5);
-
-    ngl::Mat4 view=m_lightCamera.getViewMatrix();
-    ngl::Mat4 proj=m_lightCamera.getProjectionMatrix();
-    ngl::Mat4 model;
-
-    ngl::Mat4 textureMatrix= model * view*proj * bias;
-    shader->setShaderParamFromMat4("TextureMatrix",textureMatrix);*/
+void NGLScene::RenderQuad()
+{
+  if (m_quadVAO == 0)
+  {
+    GLfloat quadVertices[] = {
+      // Positions        // Texture Coords
+      -1,  1, 0.0f, 0.0f, 1.0f,
+      -1, -1, 0.0f, 0.0f, 0.0f,
+      1,  1, 0.0f, 1.0f, 1.0f,
+      1, -1, 0.0f, 1.0f, 0.0f,
+    };
+    // Setup plane VAO
+    glGenVertexArrays(1, &m_quadVAO);
+    glGenBuffers(1, &m_quadVBO);
+    glBindVertexArray(m_quadVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, m_quadVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
+  }
+  glBindVertexArray(m_quadVAO);
+  glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+  glBindVertexArray(0);
 }
 
-//________________________________________________________________________________________________________________________________________//
-//________________________________________________________________________________________________________________________________________//
-
-/*void NGLScene::createNoiseTexture()
-{
-    int width = 128;
-    int height = 128;
-    noise::module::Perlin perlinNoise;
-    // Base frequency for octave 1.
-    perlinNoise.SetFrequency(4.0);
-   // perlinNoise.SetPersistence(1.0);
-    GLubyte *data = new GLubyte[ width * height * 4 ];
-    double xRange = 1.0;
-    double yRange = 1.0;
-    double xFactor = xRange / width;
-    double yFactor = yRange / height;
-
-    for( int oct = 0; oct < 4; oct++ ) {
-      perlinNoise.SetOctaveCount(oct+1);
-      for( int i = 0; i < width; i++ ) {
-        for( int j = 0 ; j < height; j++ ) {
-          double x = xFactor * i;
-          double y = yFactor * j;
-          double z = 0.0;
-          float val = 0.0f;
-          double a, b, c, d;
-          a = perlinNoise.GetValue(x       ,y       ,z);
-          b = perlinNoise.GetValue(x+xRange,y       ,z);
-          c = perlinNoise.GetValue(x       ,y+yRange,z);
-          d = perlinNoise.GetValue(x+xRange,y+yRange,z);
-
-          double xmix = 1.0 - x / xRange;
-          double ymix = 1.0 - y / yRange;
-          double x1 = glm::mix( a, b, xmix );
-          double x2 = glm::mix( c, d, xmix );
-          val = glm::mix(x1, x2, ymix );
-          // Scale to roughly between 0 and 1
-          val = (val + 1.0f) * 0.5f;
-          // Clamp strictly between 0 and 1
-          val = val> 1.0 ? 1.0 :val;
-          val = val< 0.0 ? 0.0 :val;
-                   // Store in texture
-          data[((j * width + i) * 4) + oct] =
-            (GLubyte) ( val * 255.0f );
-            }
-        }
-    }
-    GLuint texID;
-    glGenTextures(1, &texID);
-    glBindTexture(GL_TEXTURE_2D, texID);
-    glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,width,height,0,GL_RGBA,
-                 GL_UNSIGNED_BYTE,data);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
-                    GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                    GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    delete [] data;
-}*/
 
 //________________________________________________________________________________________________________________________________________//
-//________________________________________________________________________________________________________________________________________//
+//========================================================================================================================================//
+//unused functions
+//========================================================================================================================================//
 
-void NGLScene::CreateGBuffer()
+/*void NGLScene::CreateGBuffer()
 {
   glGenFramebuffers(1, &m_gBuffer);
   glBindFramebuffer(GL_FRAMEBUFFER, m_gBuffer);
@@ -1457,36 +1059,7 @@ void NGLScene::createSSAOKernelNoise()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
   }
-}
+}*/
+//========================================================================================================================================//
+//========================================================================================================================================//
 
-//________________________________________________________________________________________________________________________________________//
-
-// RenderQuad() Renders a 1x1 quad in NDC, best used for framebuffer colour targets
-// and post-processing effects.
-
-void NGLScene::RenderQuad()
-{
-  if (m_quadVAO == 0)
-  {
-    GLfloat quadVertices[] = {
-      // Positions        // Texture Coords
-      -1,  1, 0.0f, 0.0f, 1.0f,
-      -1, -1, 0.0f, 0.0f, 0.0f,
-      1,  1, 0.0f, 1.0f, 1.0f,
-      1, -1, 0.0f, 1.0f, 0.0f,
-    };
-    // Setup plane VAO
-    glGenVertexArrays(1, &m_quadVAO);
-    glGenBuffers(1, &m_quadVBO);
-    glBindVertexArray(m_quadVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, m_quadVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)0);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
-  }
-  glBindVertexArray(m_quadVAO);
-  glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-  glBindVertexArray(0);
-}

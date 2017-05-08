@@ -17,5 +17,5 @@ void main()
 		// also gamma correct while we're at it
 		//result = pow(result, vec3(1.0 / gamma));
 		FragColour = vec4(result, 1.0f);
-                FragColour = texture(scene, TexCoords);
+                FragColour = texture(blur, TexCoords);
 }

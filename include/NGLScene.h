@@ -201,6 +201,7 @@ private:
 
     void RenderQuad();
 
+
     GLfloat lerp(GLfloat a, GLfloat b, GLfloat f);
 
 
@@ -216,7 +217,7 @@ private:
     /// The ID of ground textures
     GLuint m_woodTex, m_woodSpec, m_woodNorm;
 
-    GLuint m_gBuffer, m_blurFBO, m_blurTexFBO, m_blurDepthFBO, m_ssaoFBO, m_ssaoBlurFBO, m_ssaoColorBuffer, m_ssaoColorBufferBlur;
+    GLuint m_blurFBO, m_blurTexFBO, m_blurDepthFBO;
 
     GLuint m_gPosition, m_gNormal, m_gColour,m_noiseTexture;
 

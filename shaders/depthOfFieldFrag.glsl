@@ -75,35 +75,52 @@ void main() {
 }*/
 
 #version 420 core
-out vec4 FragColor;
+//Code taken from https://learnopengl.com/#!Advanced-Lighting/Bloom
+out vec4 FragColour;
 
 in vec2 TexCoords;
 
 uniform sampler2D image;
+uniform sampler2D depth;
+//uniform sampler2D image2;
 uniform bool horizontal;
+
+float focalDepth = 0.5;
+float blurRadius = 0.8;
 
 uniform float weight[5] = float[] (0.2270270270, 0.1945945946, 0.1216216216, 0.0540540541, 0.0162162162);
 
 void main()
 {
+    float sigma = abs(focalDepth - texture(depth, TexCoords).x) * blurRadius;
+  //  float depthBlur = texture(depth, TexCoords).x;
+ //  depthBlur *= depthBlur ;
+    vec2 texPos = TexCoords / 0.5;
+    int HSZ = int(floor(5 / 2));
+
      vec2 tex_offset = 1.0 / textureSize(image, 0); // gets size of single texel
      vec3 result = texture(image, TexCoords).rgb * weight[0];
+     vec2 samplepos;
      if(horizontal)
      {
          for(int i = 1; i < 5; ++i)
          {
-            result += texture(image, TexCoords + vec2(tex_offset.x * i, 0.0)).rgb * weight[i];
-            result += texture(image, TexCoords - vec2(tex_offset.x * i, 0.0)).rgb * weight[i];
+             samplepos = texPos + sigma*vec2(float(i)-HSZ, 0.0);
+            result += texture(image, TexCoords + vec2(tex_offset.x * i, 0.0)).rgb * weight[i] ;//* samplepos.y;//* depthBlur;//*sigma;
+            result += texture(image, TexCoords - vec2(tex_offset.x * i, 0.0)).rgb * weight[i] ;//* samplepos.y ;//* depthBlur;//*sigma;
          }
      }
      else
      {
          for(int i = 1; i < 5; ++i)
          {
-             result += texture(image, TexCoords + vec2(0.0, tex_offset.y * i)).rgb * weight[i];
-             result += texture(image, TexCoords - vec2(0.0, tex_offset.y * i)).rgb * weight[i];
+             samplepos += texPos + sigma*vec2(0.0, float(i)-HSZ);
+             result += texture(image, TexCoords + vec2(0.0, tex_offset.y * i)).rgb * weight[i] ;//* samplepos.y ;//* depthBlur;//*sigma;
+             result += texture(image, TexCoords - vec2(0.0, tex_offset.y * i)).rgb * weight[i] ;//* samplepos.y;// * depthBlur;//*sigma;
          }
      }
-     FragColor = vec4(result, 1.0);
+     FragColour = vec4(result, 1.0) * clamp(samplepos.yyyy, 0, 1);
+     FragColour = texture(depth, TexCoords);
+ //    FragColour = texture(image, TexCoords);
 }
 

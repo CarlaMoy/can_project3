@@ -14,11 +14,13 @@ smooth out vec3 FragmentPosition;
 smooth out vec3 FragmentNormal;
 smooth out vec2 FragmentTexCoord;
 smooth out vec4 ShadowCoord;
+smooth out vec3 eyeDirection;
 
 uniform mat4 MV;            // model view matrix calculated in the App
 uniform mat4 MVP;           // model view projection calculated in the app
 uniform mat3 N;             // normal matrix calculated in the app
 uniform mat4 textureMatrix;
+uniform vec3 viewPos;
 //uniform vec3 LightPosition;
 
 
@@ -37,6 +39,8 @@ void main() {
 
     // Copy across the texture coordinates
     FragmentTexCoord = TexCoord;
+
+    eyeDirection = normalize(viewPos - vec3(MV));
 
     // Compute the position of the vertex
     gl_Position = MVP * vec4(VertexPosition,1.0);
